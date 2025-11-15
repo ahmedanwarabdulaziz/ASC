@@ -1,0 +1,49 @@
+{
+  "name": "asc",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "import-excel": "tsx scripts/import-excel.ts",
+    "migrate-data": "tsx scripts/migrate-data.ts",
+    "delete-members": "tsx scripts/delete-all-members.ts",
+    "setup-supabase": "tsx scripts/auto-setup-complete.ts",
+    "migrate-to-supabase": "tsx scripts/migrate-to-supabase.ts",
+    "import-excel-supabase": "tsx scripts/import-excel-to-supabase.ts",
+    "execute-sql": "tsx scripts/execute-sql-via-rpc.ts",
+    "execute-sql-direct": "tsx scripts/auto-execute-sql.ts",
+    "execute-sql-direct-connection": "tsx scripts/execute-sql-direct-connection.ts",
+    "test-connection": "tsx scripts/test-connection.ts",
+    "test-connection-direct": "tsx scripts/test-connection-direct.ts",
+    "check-access": "tsx scripts/check-supabase-access.ts",
+    "setup-admin": "tsx scripts/setup-admin-user.ts",
+    "create-users-table": "tsx scripts/create-users-table.ts",
+    "fix-users-table": "tsx scripts/fix-users-table.ts",
+    "add-missing-columns": "tsx scripts/add-missing-columns.ts",
+    "reset-admin-password": "tsx scripts/reset-admin-password.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.81.1",
+    "firebase": "^10.7.0",
+    "firebase-admin": "^12.0.0",
+    "next": "^14.0.0",
+    "pg": "^8.16.3",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.0.0"
+  }
+}

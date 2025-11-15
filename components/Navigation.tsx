@@ -1,0 +1,353 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { getCurrentUser, signOut, AuthUser } from '@/lib/auth';
+import Button from './Button';
+
+interface MenuItem {
+  href: string;
+  label: string;
+  iconType: 'home' | 'search' | 'dashboard' | 'users' | 'status' | 'conflicts' | 'reports' | 'voices';
+  public: boolean;
+  roles?: ('admin' | 'supervisor' | 'team_leader')[];
+}
+
+export default function Navigation() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const user = await getCurrentUser();
+      setCurrentUser(user);
+    };
+    loadUser();
+  }, [pathname]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [menuOpen]);
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  const getRoleLabel = (role: string): string => {
+    const labels: Record<string, string> = {
+      admin: 'مدير',
+      supervisor: 'مشرف',
+      team_leader: 'قائد فريق',
+    };
+    return labels[role] || role;
+  };
+
+  const visibleMenuItems = useMemo<MenuItem[]>(() => {
+    const items: MenuItem[] = [
+      {
+        href: '/',
+        label: 'الصفحة الرئيسية',
+        iconType: 'home',
+        public: true,
+      },
+      {
+        href: '/members',
+        label: 'البحث عن الأعضاء',
+        iconType: 'search',
+        public: true,
+      },
+    ];
+
+    if (currentUser) {
+      items.push({
+        href: '/dashboard',
+        label: 'لوحة التحكم',
+        iconType: 'dashboard',
+        public: false,
+      });
+
+
+      // My Voices for all authenticated users
+      items.push({
+        href: '/dashboard/my-voices',
+        label: 'أصواتي',
+        iconType: 'voices',
+        public: false,
+        roles: ['admin', 'supervisor', 'team_leader'],
+      });
+
+      // Admin and supervisor menu items
+      if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
+        items.push({
+          href: '/dashboard/users',
+          label: 'إدارة المستخدمين',
+          iconType: 'users',
+          public: false,
+        });
+      }
+
+      // Admin only menu items
+      if (currentUser.role === 'admin') {
+        items.push({
+          href: '/dashboard/conflicts',
+          label: 'حل التعارضات',
+          iconType: 'conflicts',
+          public: false,
+          roles: ['admin'],
+        });
+        items.push({
+          href: '/dashboard/reports',
+          label: 'التقارير',
+          iconType: 'reports',
+          public: false,
+          roles: ['admin'],
+        });
+      }
+    }
+
+    return items.filter((item) => {
+      if (item.public) return true;
+      if (!currentUser) return false;
+      if (item.roles && !item.roles.includes(currentUser.role)) return false;
+      return true;
+    });
+  }, [currentUser]);
+
+  const getPageTitle = (): string => {
+    if (pathname === '/members') return 'البحث عن الأعضاء';
+    if (pathname === '/dashboard') return 'لوحة التحكم';
+    if (pathname === '/dashboard/my-voices') return 'أصواتي';
+    if (pathname === '/dashboard/users') return 'إدارة المستخدمين';
+    if (pathname === '/dashboard/conflicts') return 'حل تعارضات الحالات';
+    if (pathname === '/dashboard/reports') return 'التقارير';
+    return 'نادي ASC';
+  };
+
+  const getPageSubtitle = (): string => {
+    if (pathname === '/members') return 'نظام بحث متقدم باللغة العربية';
+    if (pathname === '/dashboard/my-voices') return 'الأعضاء الذين قمت بتحديث حالتهم';
+    if (pathname === '/dashboard/users') return 'إدارة المستخدمين والأدوار';
+    if (pathname === '/dashboard/conflicts') return 'حل التعارضات بين الحالات';
+    if (pathname === '/dashboard/reports') return 'تقارير مفصلة عن الحالات والفئات';
+    return 'نظام إدارة انتخابات النادي';
+  };
+
+  const renderIcon = (iconType: string): JSX.Element | null => {
+    switch (iconType) {
+      case 'home':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        );
+      case 'search':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        );
+      case 'dashboard':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        );
+      case 'users':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        );
+      case 'status':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      case 'conflicts':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'reports':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        );
+      case 'voices':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-white/95" dir="rtl">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4 sm:py-5">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="hidden sm:flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5">
+                  {getPageTitle()}
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+                  {getPageSubtitle()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {currentUser && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+                  <span className="text-xs text-blue-700 font-medium">
+                    {currentUser.displayName || currentUser.email}
+                  </span>
+                  <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                    {getRoleLabel(currentUser.role)}
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Menu"
+              >
+                {menuOpen ? (
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <div
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+          menuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        dir="rtl"
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">القائمة</h2>
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto p-4">
+            <div className="flex flex-col gap-2">
+              {visibleMenuItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className={isActive ? 'text-white' : 'text-gray-500'}>
+                      {renderIcon(item.iconType)}
+                    </span>
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+
+              {currentUser && (
+                <>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <Button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
+                    fullWidth={true}
+                    className="flex items-center justify-center gap-3"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>تسجيل الخروج</span>
+                  </Button>
+                </>
+              )}
+
+              {!currentUser && (
+                <>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <Link
+                    href="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="block"
+                  >
+                    <Button
+                      fullWidth={true}
+                      className="flex items-center justify-center gap-3"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                      </svg>
+                      <span>تسجيل الدخول</span>
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
+        </div>
+      </div>
+    </>
+  );
+}
