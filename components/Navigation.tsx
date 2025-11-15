@@ -224,14 +224,16 @@ export default function Navigation() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 text-white">
-                  {getPageTitle()}
-                </h1>
-                <p className="text-xs sm:text-sm hidden sm:block text-gray-300">
-                  {getPageSubtitle()}
-                </p>
-              </div>
+              {!isHomePage && (
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 text-white">
+                    {getPageTitle()}
+                  </h1>
+                  <p className="text-xs sm:text-sm hidden sm:block text-gray-300">
+                    {getPageSubtitle()}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
