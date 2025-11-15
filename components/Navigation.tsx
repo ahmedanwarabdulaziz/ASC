@@ -66,14 +66,21 @@ export default function Navigation() {
         public: true,
       },
       {
-        href: '/members',
-        label: 'البحث عن الأعضاء',
-        iconType: 'search',
+        href: '/about',
+        label: 'المزيد عن ناجح البارودي',
+        iconType: 'home',
         public: true,
       },
     ];
 
     if (currentUser) {
+      items.push({
+        href: '/members',
+        label: 'البحث عن الأعضاء',
+        iconType: 'search',
+        public: false,
+      });
+      
       items.push({
         href: '/dashboard',
         label: 'لوحة التحكم',
@@ -129,6 +136,7 @@ export default function Navigation() {
   }, [currentUser]);
 
   const getPageTitle = (): string => {
+    if (pathname === '/about') return 'المزيد عن ناجح البارودي';
     if (pathname === '/members') return 'البحث عن الأعضاء';
     if (pathname === '/dashboard') return 'لوحة التحكم';
     if (pathname === '/dashboard/my-voices') return 'أصواتي';
@@ -139,6 +147,7 @@ export default function Navigation() {
   };
 
   const getPageSubtitle = (): string => {
+    if (pathname === '/about') return 'مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي';
     if (pathname === '/members') return 'نظام بحث متقدم باللغة العربية';
     if (pathname === '/dashboard/my-voices') return 'الأعضاء الذين قمت بتحديث حالتهم';
     if (pathname === '/dashboard/users') return 'إدارة المستخدمين والأدوار';
@@ -202,22 +211,24 @@ export default function Navigation() {
     }
   };
 
+  const isHomePage = pathname === '/';
+
   return (
     <>
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-white/95" dir="rtl">
+      <header className="bg-black/80 border-yellow-500/20 border-b shadow-sm sticky top-0 z-50 backdrop-blur-md" dir="rtl">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4 sm:py-5">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="hidden sm:flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg">
+              <div className="hidden sm:flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-lg">
                 <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-0.5 text-white">
                   {getPageTitle()}
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">
+                <p className="text-xs sm:text-sm hidden sm:block text-gray-300">
                   {getPageSubtitle()}
                 </p>
               </div>
@@ -225,26 +236,26 @@ export default function Navigation() {
 
             <div className="flex items-center gap-3">
               {currentUser && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
-                  <span className="text-xs text-blue-700 font-medium">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
+                  <span className="text-xs font-medium text-yellow-400">
                     {currentUser.displayName || currentUser.email}
                   </span>
-                  <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                  <span className="text-xs px-2 py-0.5 rounded text-yellow-500 bg-yellow-500/20">
                     {getRoleLabel(currentUser.role)}
                   </span>
                 </div>
               )}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-yellow-500/20 focus:ring-yellow-500"
                 aria-label="Menu"
               >
                 {menuOpen ? (
-                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 )}
@@ -263,7 +274,7 @@ export default function Navigation() {
       )}
 
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white border-gray-200 border-l shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           menuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         dir="rtl"
@@ -273,7 +284,7 @@ export default function Navigation() {
             <h2 className="text-xl font-bold text-gray-900">القائمة</h2>
             <button
               onClick={() => setMenuOpen(false)}
-              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors hover:bg-gray-100"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,11 +304,11 @@ export default function Navigation() {
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-md'
+                        ? 'bg-yellow-500 text-black shadow-md'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <span className={isActive ? 'text-white' : 'text-gray-500'}>
+                    <span className={isActive ? 'text-black' : 'text-gray-500'}>
                       {renderIcon(item.iconType)}
                     </span>
                     <span className="font-medium">{item.label}</span>
@@ -307,14 +318,14 @@ export default function Navigation() {
 
               {currentUser && (
                 <>
-                  <div className="border-t border-gray-200 my-2"></div>
+                  <div className="border-t my-2 border-gray-200"></div>
                   <Button
                     onClick={() => {
                       setMenuOpen(false);
                       handleLogout();
                     }}
                     fullWidth={true}
-                    className="flex items-center justify-center gap-3"
+                    className="flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -326,7 +337,7 @@ export default function Navigation() {
 
               {!currentUser && (
                 <>
-                  <div className="border-t border-gray-200 my-2"></div>
+                  <div className="border-t my-2 border-gray-200"></div>
                   <Link
                     href="/login"
                     onClick={() => setMenuOpen(false)}
@@ -334,7 +345,7 @@ export default function Navigation() {
                   >
                     <Button
                       fullWidth={true}
-                      className="flex items-center justify-center gap-3"
+                      className="flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />

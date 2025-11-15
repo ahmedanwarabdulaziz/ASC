@@ -1,44 +1,73 @@
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import Button from '@/components/Button';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-black" dir="rtl">
       <Navigation />
       <main>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-4xl font-bold text-blue mb-6 text-center">
-            مرحباً بكم في نظام إدارة انتخابات نادي ASC
-          </h1>
+        {/* Hero Section */}
+        <section className="relative w-full h-[600px] md:h-[700px] overflow-hidden bg-black">
+          <img
+            src="/img/nageh-hero.jpg"
+            alt="Hero Background"
+            className="absolute top-0 left-0 w-full h-full object-cover z-0"
+          />
+          <div className="absolute inset-0 bg-black/60 z-[1]"></div>
           
-          <div className="prose prose-lg max-w-none mb-8">
-            <p className="text-gray-700 text-lg leading-relaxed mb-4">
-              مرحباً، أنا [اسمك] وأنا مرشح لانتخابات نادي ASC. أقدم لكم هذا النظام البسيط 
-              لإدارة فريق الانتخابات ومتابعة أعضائنا.
-            </p>
-            
-            <p className="text-gray-700 text-lg leading-relaxed">
-              يمكنكم من خلال هذا النظام:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2 mt-4">
-              <li>عرض جميع أعضاء الفريق</li>
-              <li>توزيع الأعضاء على الفرق</li>
-              <li>متابعة حالة كل عضو</li>
-              <li>إضافة ملاحظات ومعلومات مهمة</li>
-            </ul>
+          <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">
+            <div className="text-center max-w-4xl pt-20 md:pt-32">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight">
+                ناجح البارودي
+              </h1>
+              <h2 className="text-lg md:text-xl lg:text-2xl font-bold mb-8 leading-tight">
+                <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
+                  مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي
+                </span>
+              </h2>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link href="/login" className="inline-block">
+                  <button className="px-10 py-4 bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-700 hover:from-yellow-600 hover:via-yellow-700 hover:to-yellow-800 text-black font-bold text-lg rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-400">
+                    دخول اعضاء الحملة الانتخابية
+                  </button>
+                </Link>
+                <Link href="/about" className="inline-block">
+                  <button className="px-10 py-4 bg-transparent border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold text-lg rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                    المزيد عن ناجح البارودي
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <div className="mt-8 text-center">
-            <Link href="/login" className="inline-block">
-              <Button size="lg">
-                تسجيل الدخول
-              </Button>
-            </Link>
+        {/* Why Section */}
+        <section className="py-20 px-4 bg-black">
+          <div className="container mx-auto max-w-4xl text-center">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+              <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
+                لماذا ناجح البارودي
+              </span>
+            </h2>
+            <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-12 leading-tight">
+              لرئاسة نادي اسيوط الرياضي
+            </h3>
+            
+            <div className="text-right space-y-6 text-white text-lg md:text-xl leading-relaxed">
+              <p className="text-gray-200">
+                في ظل المرحلة الحرجة التي يمر بها نادي أسيوط الرياضي، يؤمن ناجح البارودي بأن الحفاظ على تاريخ هذا النادي العريق مسؤولية جماعية تستند إلى الإخلاص والمثابرة والإصرار. ومن هذا المنطلق، قرر الترشح لرئاسة مجلس إدارة النادي، واضعًا نصب عينيه هدفًا واضحًا: إعادة نادي أسيوط إلى مكانته المرموقة ومجده الرياضي والثقافي.
+              </p>
+              
+              <p className="text-gray-200">
+                يرى ناجح البارودي أن قضية "أرض النادي" تمثل حجر الأساس لأي مسار إصلاحي أو تطويري، وأن معالجتها تمثل الخطوة الأولى نحو مستقبل أكثر استقرارًا واستدامة. لذلك جعل من إنهاء مشكلة سحب أرض النادي وسداد المتأخرات المالية أولوية قصوى ضمن برنامجه الانتخابي.
+              </p>
+              
+              <p className="text-gray-200">
+                يؤمن ناجح بأن النجاح لا يتحقق إلا بالعمل المنظم والرؤية الواضحة، وقد اطّلع بعناية على جميع البرامج والمقترحات الانتخابية للمرشحين الآخرين، مقدّرًا ما تحمله من أفكار طموحة تستشرف مستقبلًا واعدًا للنادي خلال السنوات القادمة. ومع ذلك، فهو يرى أن جميع تلك المبادرات تبقى رهينة حلّ الأزمة الأساسية المتعلقة بأرض النادي، ويدعو إلى وضع جدول زمني مدروس لتطبيق خطط التطوير فور استقرار هذا الملف.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
       </main>
     </div>
   );

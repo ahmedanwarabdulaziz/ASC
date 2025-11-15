@@ -61,8 +61,13 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
+  // Skip middleware for static files (images, etc.)
+  if (pathname.startsWith('/img/') || pathname.startsWith('/_next/') || pathname.startsWith('/favicon.ico')) {
+    return response;
+  }
+
   // Public routes that don't require authentication
-  const publicRoutes = ['/', '/login', '/members'];
+  const publicRoutes = ['/', '/login', '/members', '/about'];
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
 
   // If accessing a protected route without session, redirect to login
@@ -117,8 +122,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - img/ (image files)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|img/).*)',
   ],
 };
 
