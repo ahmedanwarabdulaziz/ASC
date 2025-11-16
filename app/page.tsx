@@ -39,11 +39,6 @@ export default function Home() {
                     المزيد عن ناجح البارودي
                   </button>
                 </Link>
-                <Link href="/download" className="inline-block">
-                  <button className="px-10 py-4 bg-yellow-500/20 border-2 border-yellow-500 text-yellow-300 hover:bg-yellow-500/30 hover:text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-                    تحميل التطبيق
-                  </button>
-                </Link>
               </div>
             </div>
           </div>
