@@ -82,14 +82,48 @@ export async function GET(request: NextRequest) {
               email,
               display_name,
               role,
-              code
+              code,
+              supervisor_id
             )
           `)
           .in('id', conflict.status_ids);
 
+        // If we have leader updates, load their supervisors in one batch and attach
+        let enrichedStatuses = statuses || [];
+        try {
+          const supervisorIds = Array.from(
+            new Set(
+              (enrichedStatuses || [])
+                .map((s: any) => s?.updated_by_user)
+                .filter((u: any) => u && u.role === 'team_leader' && u.supervisor_id)
+                .map((u: any) => u.supervisor_id)
+            )
+          ) as string[];
+
+          if (supervisorIds.length > 0) {
+            const { data: supervisors } = await supabaseAdmin
+              .from('users')
+              .select('id, email, display_name, role, code')
+              .in('id', supervisorIds);
+
+            const supMap = new Map((supervisors || []).map((s: any) => [s.id, s]));
+            enrichedStatuses = enrichedStatuses.map((s: any) => {
+              if (s?.updated_by_user?.role === 'team_leader' && s.updated_by_user.supervisor_id) {
+                const sup = supMap.get(s.updated_by_user.supervisor_id);
+                if (sup) {
+                  s.updated_by_user = { ...s.updated_by_user, supervisor: sup };
+                }
+              }
+              return s;
+            });
+          }
+        } catch (e) {
+          // If supervisor enrichment fails, proceed with base statuses
+        }
+
         return {
           ...conflict,
-          statuses: statuses || [],
+          statuses: enrichedStatuses,
         };
       })
     );

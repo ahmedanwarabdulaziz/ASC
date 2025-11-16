@@ -133,7 +133,7 @@ export default function ConflictsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {conflict.member_name || conflict.member_id}
+                          {conflict.member?.name || conflict.member_name || conflict.member?.member_id || conflict.member_id}
                         </h3>
                         <p className="text-sm text-gray-600">
                           {new Date(conflict.created_at).toLocaleDateString('ar-EG')}
@@ -180,9 +180,10 @@ export default function ConflictsPage() {
                             <p className="text-sm text-gray-600 mt-2">{status.notes}</p>
                           )}
                           <div className="mt-2 text-xs text-gray-500">
-                            {status.updated_by_name || status.updated_by_email}
-                            {status.supervisor_code && ` (${status.supervisor_code})`}
-                            {status.leader_code && ` (${status.leader_code})`}
+                            {status.updated_by_user?.display_name || status.updated_by_name || status.updated_by_user?.email || status.updated_by_email}
+                            {status.updated_by_user?.role === 'team_leader' && status.updated_by_user?.supervisor?.display_name && (
+                              <span>{` — المشرف: ${status.updated_by_user.supervisor.display_name}`}</span>
+                            )}
                           </div>
                         </div>
                       ))}

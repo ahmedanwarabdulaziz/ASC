@@ -11,6 +11,21 @@ export interface MemberStatusRecord {
   updated_by: string;
   updated_by_name?: string;
   updated_by_email?: string;
+  updated_by_user?: {
+    id: string;
+    email: string;
+    display_name?: string;
+    role: UserRole;
+    code?: string;
+    supervisor_id?: string;
+    supervisor?: {
+      id: string;
+      email: string;
+      display_name?: string;
+      role: UserRole;
+      code?: string;
+    };
+  };
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -41,6 +56,11 @@ export interface StatusConflict {
   id: string;
   member_id: string;
   member_name?: string;
+  member?: {
+    id: string;
+    name?: string;
+    member_id?: string;
+  };
   status_ids: string[];
   statuses?: MemberStatusRecord[];
   resolved: boolean;
