@@ -40,6 +40,11 @@ export default function MembersSearchPage() {
   const [showCategoryDialog, setShowCategoryDialog] = useState<string | null>(null);
   const [savingStatus, setSavingStatus] = useState<Record<string, boolean>>({});
   const [savingCategory, setSavingCategory] = useState<Record<string, boolean>>({});
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberPhone, setNewMemberPhone] = useState('');
+  const [newMemberId, setNewMemberId] = useState('');
+  const [savingMember, setSavingMember] = useState(false);
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -638,17 +643,27 @@ export default function MembersSearchPage() {
       <Navigation />
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Create Category Button - Only for supervisors/leaders */}
-        {currentUser && (currentUser.role === 'supervisor' || currentUser.role === 'team_leader') && (
-          <div className="mb-4 flex justify-end">
+        {/* Actions */}
+        <div className="mb-4 flex justify-between gap-3">
+          {/* Add Member Button - Admin and supervisor can add; leaders too if desired */}
+          {currentUser && (currentUser.role === 'admin' || currentUser.role === 'supervisor' || currentUser.role === 'team_leader') && (
+            <Button
+              onClick={() => setShowAddMemberDialog(true)}
+              size="sm"
+            >
+              إضافة عضو جديد
+            </Button>
+          )}
+          {/* Create Category Button - Only for supervisors/leaders */}
+          {currentUser && (currentUser.role === 'supervisor' || currentUser.role === 'team_leader') && (
             <Button
               onClick={() => setShowCategoryForm(!showCategoryForm)}
               size="sm"
             >
               {showCategoryForm ? 'إلغاء' : 'إضافة فئة جديدة'}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Create Category Form */}
         {showCategoryForm && currentUser && (currentUser.role === 'supervisor' || currentUser.role === 'team_leader') && (
@@ -1260,6 +1275,113 @@ export default function MembersSearchPage() {
           </div>
         )}
       </main>
+      {/* Add Member Dialog */}
+      {showAddMemberDialog && currentUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">إضافة عضو جديد</h2>
+                <button
+                  onClick={() => setShowAddMemberDialog(false)}
+                  className="text-white hover:text-gray-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  الاسم <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  placeholder="اكتب الاسم"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  رقم العضو <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newMemberId}
+                  onChange={(e) => setNewMemberId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  placeholder="مثال: 12345"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  الهاتف (اختياري)
+                </label>
+                <input
+                  type="text"
+                  value={newMemberPhone}
+                  onChange={(e) => setNewMemberPhone(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  placeholder="مثال: 010xxxxxxxx"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={async () => {
+                    if (!newMemberName.trim() || !newMemberId.trim()) {
+                      return;
+                    }
+                    try {
+                      setSavingMember(true);
+                      const resp = await fetch('/api/members', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          name: newMemberName.trim(),
+                          member_id: newMemberId.trim(),
+                          phone: newMemberPhone.trim() || null,
+                        }),
+                      });
+                      const result = await resp.json();
+                      if (!resp.ok) {
+                        setSavingMember(false);
+                        return;
+                      }
+                      // Reset and close
+                      setNewMemberName('');
+                      setNewMemberId('');
+                      setNewMemberPhone('');
+                      setShowAddMemberDialog(false);
+                      setSavingMember(false);
+                      // Reload initial list to include the new member
+                      await loadInitialMembers(currentUser);
+                    } catch (e) {
+                      setSavingMember(false);
+                    }
+                  }}
+                  disabled={savingMember || !newMemberName.trim() || !newMemberId.trim()}
+                  fullWidth={true}
+                >
+                  {savingMember ? 'جاري الحفظ...' : 'حفظ'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowAddMemberDialog(false);
+                  }}
+                  fullWidth={true}
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

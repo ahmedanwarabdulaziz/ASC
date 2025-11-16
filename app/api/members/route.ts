@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { normalizeArabic } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -109,6 +110,51 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching members:', error);
     return NextResponse.json(
       { error: `Error: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Create a new member
+export async function POST(request: NextRequest) {
+  try {
+    const { name, phone, member_id } = await request.json();
+
+    if (!name || !member_id) {
+      return NextResponse.json(
+        { error: 'الاسم ورقم العضوية مطلوبان' },
+        { status: 400 }
+      );
+    }
+
+    const insertData: any = {
+      name: name.trim(),
+      name_search: normalizeArabic(name.trim()),
+      member_id: String(member_id).trim(),
+      phone: phone ? String(phone).trim() : null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      status: 'pending',
+    };
+
+    const { data, error } = await supabaseAdmin
+      .from('members')
+      .insert(insertData)
+      .select('*')
+      .single();
+
+    if (error) {
+      // Unique violation on member_id or other db errors
+      return NextResponse.json(
+        { error: error.message || 'فشل إنشاء العضو' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true, member: data });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: `خطأ: ${error.message}` },
       { status: 500 }
     );
   }
