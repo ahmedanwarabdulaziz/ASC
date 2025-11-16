@@ -238,14 +238,26 @@ export default function Navigation() {
 
             <div className="flex items-center gap-3">
               {currentUser && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
-                  <span className="text-xs font-medium text-yellow-400">
-                    {currentUser.displayName || currentUser.email}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded text-yellow-500 bg-yellow-500/20">
-                    {getRoleLabel(currentUser.role)}
-                  </span>
-                </div>
+                <>
+                  {/* Desktop/tablet badge */}
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
+                    <span className="text-xs font-medium text-yellow-400">
+                      {currentUser.displayName || currentUser.email}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded text-yellow-500 bg-yellow-500/20">
+                      {getRoleLabel(currentUser.role)}
+                    </span>
+                  </div>
+                  {/* Mobile compact label */}
+                  <div className="sm:hidden flex items-center gap-1.5 px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/30">
+                    <span className="text-[11px] font-medium text-yellow-400 truncate max-w-[120px]">
+                      {currentUser.displayName || currentUser.email}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded text-yellow-500 bg-yellow-500/20 whitespace-nowrap">
+                      {getRoleLabel(currentUser.role)}
+                    </span>
+                  </div>
+                </>
               )}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
