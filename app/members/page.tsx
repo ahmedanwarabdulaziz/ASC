@@ -138,6 +138,7 @@ export default function MembersSearchPage() {
           teamName: member.team_name,
           createdAt: member.created_at ? new Date(member.created_at) : new Date(),
           updatedAt: member.updated_at ? new Date(member.updated_at) : new Date(),
+          searchTokens: member.search_tokens || member.searchTokens || [],
         };
         return m;
       }) as Member[];
@@ -200,6 +201,7 @@ export default function MembersSearchPage() {
         updatedAt: member.updated_at ? new Date(member.updated_at) : new Date(),
         rank: member.rank || 0,
         match_type: member.match_type || 'partial',
+        searchTokens: member.search_tokens || [],
       })) as SearchResult[];
 
       // Load statuses and categories for all members first, then render once
