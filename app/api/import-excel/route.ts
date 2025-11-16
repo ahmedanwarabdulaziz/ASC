@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
     let batch = adminDb.batch();
     let batchCount = 0;
 
+    const normalizePhone = (value: any) => {
+      const raw = value !== null && value !== undefined ? String(value).trim() : '';
+      if (!raw) return '';
+      // If already starts with 0, keep as is; otherwise prepend 0
+      return raw.startsWith('0') ? raw : `0${raw}`;
+    };
+
     // Process each row
     for (const row of data as any[]) {
       // Find name field (could be in different columns)
@@ -48,7 +55,8 @@ export async function POST(request: NextRequest) {
 
       // Extract other common fields
       const email = row.email || row['البريد الإلكتروني'] || row['Email'] || row['E-mail'] || '';
-      const phone = row.phone || row['الهاتف'] || row['رقم الهاتف'] || row['Phone'] || row['Mobile'] || '';
+      const rawPhone = row.phone || row['الهاتف'] || row['رقم الهاتف'] || row['Phone'] || row['Mobile'] || '';
+      const phone = normalizePhone(rawPhone);
 
       // Generate search tokens for fast Arabic search
       const nameTokens = generateSearchTokens(name);

@@ -9,7 +9,7 @@ import Button from './Button';
 interface MenuItem {
   href: string;
   label: string;
-  iconType: 'home' | 'search' | 'dashboard' | 'users' | 'status' | 'conflicts' | 'reports' | 'voices';
+  iconType: 'home' | 'search' | 'dashboard' | 'users' | 'status' | 'conflicts' | 'reports' | 'voices' | 'download';
   public: boolean;
   roles?: ('admin' | 'supervisor' | 'team_leader')[];
 }
@@ -17,6 +17,7 @@ interface MenuItem {
 export default function Navigation() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -27,6 +28,21 @@ export default function Navigation() {
     };
     loadUser();
   }, [pathname]);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -46,6 +62,24 @@ export default function Navigation() {
   const handleLogout = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const handleInstallApp = async () => {
+    try {
+      if (deferredPrompt) {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+        } else {
+          router.push('/download');
+        }
+      } else {
+        router.push('/download');
+      }
+    } catch {
+      router.push('/download');
+    }
   };
 
   const getRoleLabel = (role: string): string => {
@@ -69,6 +103,12 @@ export default function Navigation() {
         href: '/about',
         label: 'المزيد عن ناجح البارودي',
         iconType: 'home',
+        public: true,
+      },
+      {
+        href: '/download',
+        label: 'تحميل التطبيق',
+        iconType: 'download',
         public: true,
       },
     ];
@@ -206,6 +246,12 @@ export default function Navigation() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m-6 8h6a2 2 0 002-2V7a2 2 0 00-2-2h-1.5a1.5 1.5 0 01-3 0H9A2 2 0 007 7v9a2 2 0 002 2z" />
           </svg>
         );
+      case 'download':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+          </svg>
+        );
       default:
         return null;
     }
@@ -259,6 +305,17 @@ export default function Navigation() {
                   </div>
                 </>
               )}
+              <div className="hidden sm:block">
+                <Button
+                  onClick={handleInstallApp}
+                  className="flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                  </svg>
+                  <span>تحميل التطبيق</span>
+                </Button>
+              </div>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-yellow-500/20 focus:ring-yellow-500"
@@ -312,21 +369,41 @@ export default function Navigation() {
               {visibleMenuItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      isActive
-                        ? 'bg-yellow-500 text-black shadow-md'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className={isActive ? 'text-black' : 'text-gray-500'}>
-                      {renderIcon(item.iconType)}
-                    </span>
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
+                  item.iconType === 'download' ? (
+                    <button
+                      key={item.href}
+                      onClick={() => {
+                        handleInstallApp();
+                        setMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        isActive
+                          ? 'bg-yellow-500 text-black shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className={isActive ? 'text-black' : 'text-gray-500'}>
+                        {renderIcon(item.iconType)}
+                      </span>
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        isActive
+                          ? 'bg-yellow-500 text-black shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className={isActive ? 'text-black' : 'text-gray-500'}>
+                        {renderIcon(item.iconType)}
+                      </span>
+                      <span className="font-medium">{item.label}</span>
+                    </Link>
+                  )
                 );
               })}
 

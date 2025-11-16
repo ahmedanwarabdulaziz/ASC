@@ -4,6 +4,8 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'ناجح البارودي - مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي',
   description: 'الحملة الانتخابية 2025 - اهداء من North Via Tech -- تورونتو - كندا  \n(647) 675-3343',
+  manifest: '/manifest.webmanifest',
+  themeColor: '#F59E0B',
   openGraph: {
     title: 'ناجح البارودي - مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي',
     description: 'الحملة الانتخابية 2025 - اهداء من North Via Tech -- تورونتو - كندا  \n(647) 675-3343',

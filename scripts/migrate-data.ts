@@ -8,6 +8,12 @@ async function migrateData() {
     console.log('Starting data migration...');
     console.log('This will update existing records with proper field names.\n');
 
+    const normalizePhone = (value: any) => {
+      const raw = value !== null && value !== undefined ? String(value).trim() : '';
+      if (!raw) return '';
+      return raw.startsWith('0') ? raw : `0${raw}`;
+    };
+
     const membersRef = adminDb.collection('members');
     const snapshot = await membersRef.get();
 
@@ -67,8 +73,8 @@ async function migrateData() {
 
       const address = oldEmpty2 || '';
       const job = oldEmpty3 || '';
-      const landline = oldEmpty4 || '';
-      const mobile = oldEmpty5 || '';
+      const landline = normalizePhone(oldEmpty4 || '');
+      const mobile = normalizePhone(oldEmpty5 || '');
 
       // Generate search tokens
       const nameTokens = generateSearchTokens(name);
@@ -86,7 +92,7 @@ async function migrateData() {
         job: job,
         landline: landline,
         mobile: mobile,
-        phone: mobile || data.phone || '',
+        phone: mobile || normalizePhone(data.phone || ''),
         updatedAt: new Date(),
       };
 
