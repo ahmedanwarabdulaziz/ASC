@@ -169,3 +169,4 @@ CREATE POLICY "Users can update own notifications" ON conflict_notifications
   WITH CHECK (user_id = auth.uid());
 
 
+

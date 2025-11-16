@@ -45,3 +45,4 @@ This will import all 3,640 members from your Excel file directly to Supabase.
 If you see "table not found" errors, it means Step 1 wasn't completed. Go back and create the tables first!
 
 
+

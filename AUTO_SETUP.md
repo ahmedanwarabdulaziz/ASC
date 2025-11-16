@@ -48,3 +48,4 @@ After setup, check Supabase Dashboard → Table Editor:
 - Test search: Run `SELECT search_members('test');` in SQL Editor
 
 
+

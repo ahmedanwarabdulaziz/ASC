@@ -27,3 +27,4 @@ export function getStatusColor(status: MemberStatus): string {
 export const statusOrder: MemberStatus[] = ['chance', 'called', 'will_vote', 'sure_vote', 'voted'];
 
 
+

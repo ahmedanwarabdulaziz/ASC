@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Assign a member to a category
 export async function POST(
   request: NextRequest,

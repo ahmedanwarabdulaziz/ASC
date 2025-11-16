@@ -13,3 +13,4 @@ CREATE INDEX IF NOT EXISTS idx_users_code ON users(code);
 -- Note: We'll enforce this in application logic since CHECK constraints can't reference other columns easily
 
 
+

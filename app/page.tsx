@@ -8,11 +8,14 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section className="relative w-full h-[600px] md:h-[700px] overflow-hidden bg-black">
-          <img
-            src="/img/nageh-hero.jpg"
-            alt="Hero Background"
-            className="absolute top-0 left-0 w-full h-full object-cover z-0"
-          />
+          <picture className="absolute top-0 left-0 w-full h-full z-0">
+            <source media="(min-width: 768px)" srcSet="/img/Nageh%20Hero%20web.jpg" />
+            <img
+              src="/img/nageh-hero.jpg"
+              alt="Hero Background"
+              className="w-full h-full object-cover"
+            />
+          </picture>
           <div className="absolute inset-0 bg-black/60 z-[1]"></div>
           
           <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">

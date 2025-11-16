@@ -148,3 +148,4 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION search_members IS 'Simple and reliable search: searches original columns directly with ILIKE. Guaranteed to find all names.';
 
 
+

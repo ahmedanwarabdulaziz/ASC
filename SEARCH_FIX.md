@@ -62,3 +62,4 @@ SELECT * FROM search_members('مصطفى');
 ✅ **All names will now be found** - the search is simple, direct, and reliable.
 
 
+

@@ -96,3 +96,4 @@ if (!process.env.DATABASE_URL && !connectionString.includes('your-database-passw
 createTables();
 
 
+

@@ -174,7 +174,7 @@ export default function MyVoicesPage() {
       const data = await response.json();
       
       if (data.success) {
-        const membersData = (data.members || []).map((member: any) => ({
+        let membersData = (data.members || []).map((member: any) => ({
           id: member.id,
           memberId: member.member_id,
           name: member.name,
@@ -216,6 +216,26 @@ export default function MyVoicesPage() {
           updatedByName: member.updated_by_name,
           updatedAt: member.updated_at,
         })) as VoiceMember[];
+
+        // Apply client-side user filter to ensure correctness
+        if (currentUser && userFilter !== 'all') {
+          let selectedUserId: string | null = null;
+          if (userFilter.startsWith('supervisor:')) {
+            selectedUserId = currentUser.id;
+          } else if (userFilter.startsWith('leader:')) {
+            const code = userFilter.split(':')[1];
+            const leader = leaders.find(l => l.code === code);
+            selectedUserId = leader?.id || null;
+          }
+          if (selectedUserId) {
+            membersData = membersData.filter(m => {
+              const latestUpdater = m.latestStatus?.updated_by;
+              const categoryAssigner = (m.category as any)?.assigned_by;
+              const fallbackUpdater = m.updatedBy;
+              return latestUpdater === selectedUserId || categoryAssigner === selectedUserId || fallbackUpdater === selectedUserId;
+            });
+          }
+        }
 
         setMembers(membersData);
         
@@ -307,8 +327,13 @@ export default function MyVoicesPage() {
       const response = await fetch(`/api/members/${memberId}/category`);
       const result = await response.json();
       if (result.assignment) {
-        setMemberCategories(prev => ({ ...prev, [memberId]: result.assignment }));
-        setSelectedCategoryId(prev => ({ ...prev, [memberId]: result.assignment.category_id }));
+        const assignment = result.assignment;
+        const normalized = {
+          ...assignment,
+          category_name: assignment.category?.name || assignment.category_name,
+        };
+        setMemberCategories(prev => ({ ...prev, [memberId]: normalized }));
+        setSelectedCategoryId(prev => ({ ...prev, [memberId]: normalized.category_id }));
       } else {
         setMemberCategories(prev => ({ ...prev, [memberId]: null }));
         setSelectedCategoryId(prev => ({ ...prev, [memberId]: '' }));
@@ -640,33 +665,42 @@ export default function MyVoicesPage() {
                                 })()}
                               </button>
 
-                              {/* Category Icon - Only for team leaders */}
-                              {currentUser && currentUser.role === 'team_leader' && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setShowCategoryDialog(member.id);
-                                  }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onTouchStart={(e) => e.stopPropagation()}
-                                className="flex items-center gap-1.5 flex-shrink-0 px-2 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation relative z-10"
-                                style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
-                              >
-                                <div className={`w-4 h-4 rounded-full flex items-center justify-center shadow-sm`} style={{ backgroundColor: memberCategories[member.id] || member.category ? '#2563eb' : '#000000' }}>
-                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                  </svg>
-                                </div>
-                                {(memberCategories[member.id] || member.category) && (memberCategories[member.id]?.category_name || member.category?.category_name) ? (
-                                  <span className="text-xs text-gray-600 font-medium">
-                                    {memberCategories[member.id]?.category_name || member.category?.category_name}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-gray-400">لا يوجد تصنيف</span>
-                                )}
-                                </button>
-                              )}
+                              {/* Category Icon - Team leaders always; supervisors can edit their own or unassigned */}
+                              {currentUser && (() => {
+                                const role = currentUser.role;
+                                const assignment = memberCategories[member.id] || member.category;
+                                const isLeader = role === 'team_leader';
+                                const isSupervisor = role === 'supervisor';
+                                const isSupervisorOwn = isSupervisor && assignment && assignment.assigned_by === currentUser.id;
+                                const canShow = isLeader || isSupervisorOwn || (isSupervisor && !assignment);
+                                if (!canShow) return null;
+                                return (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setShowCategoryDialog(member.id);
+                                    }}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-1.5 flex-shrink-0 px-2 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation relative z-10"
+                                    style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
+                                  >
+                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center shadow-sm`} style={{ backgroundColor: assignment ? '#2563eb' : '#000000' }}>
+                                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                      </svg>
+                                    </div>
+                                    {assignment?.category_name ? (
+                                      <span className="text-xs text-gray-600 font-medium">
+                                        {assignment.category_name}
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-gray-400">لا يوجد تصنيف</span>
+                                    )}
+                                  </button>
+                                );
+                              })()}
 
                               {/* Updated By Info */}
                               {member.updatedByName && (
@@ -843,8 +877,8 @@ export default function MyVoicesPage() {
           </div>
         )}
 
-        {/* Category Dialog - Only for team leaders */}
-        {showCategoryDialog && currentUser && currentUser.role === 'team_leader' && (
+        {/* Category Dialog - Team leaders and supervisors */}
+        {showCategoryDialog && currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'supervisor') && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" dir="rtl">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[85vh] overflow-y-auto">
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 sticky top-0">

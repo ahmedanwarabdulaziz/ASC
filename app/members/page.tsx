@@ -110,11 +110,17 @@ export default function MembersSearchPage() {
   const loadInitialMembers = async (user?: any) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/members?limit=50');
-      const data = await response.json();
-      
-      if (data.success) {
-        const membersData = data.members.map((member: any) => ({
+      const response = await fetch('/api/members/with-status-category?limit=50');
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to load members with status/category');
+      }
+
+      const rawMembers = result.members || [];
+      const dataMap = result.data || {};
+
+      const membersData = rawMembers.map((member: any) => {
+        const m: Member = {
           id: member.id,
           memberId: member.member_id,
           name: member.name,
@@ -132,16 +138,29 @@ export default function MembersSearchPage() {
           teamName: member.team_name,
           createdAt: member.created_at ? new Date(member.created_at) : new Date(),
           updatedAt: member.updated_at ? new Date(member.updated_at) : new Date(),
-        })) as Member[];
-        setMembers(membersData);
-        setTotalCount(membersData.length);
-        
-        // Load statuses and categories for all members if user is supervisor or leader
-        const userToCheck = user || currentUser;
-        if (userToCheck && (userToCheck.role === 'supervisor' || userToCheck.role === 'team_leader')) {
-          loadAllMembersStatusesAndCategories(membersData);
-        }
-      }
+        };
+        return m;
+      }) as Member[];
+
+      const newStatuses: Record<string, MemberStatusRecord[]> = {};
+      const newCategories: Record<string, MemberCategoryAssignment | null> = {};
+      const updatedWithLatest = (membersData as SearchResult[]).map((m) => {
+        const entry = dataMap[m.id];
+        if (entry?.statuses) newStatuses[m.id] = entry.statuses;
+        newCategories[m.id] = entry?.category ?? null;
+        return { ...m, latestStatus: entry?.latestStatus || undefined };
+      });
+
+      // Also attach category to member objects for immediate render fallback
+      const updatedWithCategory = updatedWithLatest.map(m => {
+        const entry = dataMap[m.id];
+        return { ...m, category: entry?.category || undefined };
+      });
+
+      setMembers(updatedWithCategory);
+      setMemberStatuses(prev => ({ ...prev, ...newStatuses }));
+      setMemberCategories(prev => ({ ...prev, ...newCategories }));
+      setTotalCount(membersData.length);
     } catch (error) {
       console.error('Error loading members:', error);
     } finally {
@@ -183,13 +202,16 @@ export default function MembersSearchPage() {
         match_type: member.match_type || 'partial',
       })) as SearchResult[];
 
-      setMembers(searchResults);
-      setTotalCount(searchResults.length);
-      
-      // Load statuses and categories for all members
-      if (currentUser && (currentUser.role === 'supervisor' || currentUser.role === 'team_leader')) {
-        loadAllMembersStatusesAndCategories(searchResults);
+      // Load statuses and categories for all members first, then render once
+      let finalResults: SearchResult[] = searchResults;
+      if (currentUser && (currentUser.role === 'supervisor' || currentUser.role === 'team_leader' || currentUser.role === 'admin')) {
+        const updated = await loadAllMembersStatusesAndCategories(searchResults);
+        if (updated && Array.isArray(updated)) {
+          finalResults = updated;
+        }
       }
+      setMembers(finalResults);
+      setTotalCount(finalResults.length);
     } catch (error: any) {
       console.error('Search error:', error);
       setMembers([]);
@@ -236,7 +258,7 @@ export default function MembersSearchPage() {
   const checkAuthAndLoadData = async () => {
     const user = await getCurrentUser();
     setCurrentUser(user);
-    if (user && (user.role === 'supervisor' || user.role === 'team_leader')) {
+    if (user && (user.role === 'supervisor' || user.role === 'team_leader' || user.role === 'admin')) {
       await loadCategories();
     }
     await loadInitialMembers(user);
@@ -284,8 +306,13 @@ export default function MembersSearchPage() {
       const response = await fetch(`/api/members/${memberId}/category`);
       const result = await response.json();
       if (result.assignment) {
-        setMemberCategories(prev => ({ ...prev, [memberId]: result.assignment }));
-        setSelectedCategoryId(prev => ({ ...prev, [memberId]: result.assignment.category_id }));
+        const assignment = result.assignment;
+        const normalized = {
+          ...assignment,
+          category_name: assignment.category?.name || assignment.category_name,
+        };
+        setMemberCategories(prev => ({ ...prev, [memberId]: normalized }));
+        setSelectedCategoryId(prev => ({ ...prev, [memberId]: normalized.category_id }));
       } else {
         setMemberCategories(prev => ({ ...prev, [memberId]: null }));
         setSelectedCategoryId(prev => ({ ...prev, [memberId]: '' }));
@@ -328,6 +355,8 @@ export default function MembersSearchPage() {
           }
           if (memberData.category) {
             newMemberCategories[member.id] = memberData.category;
+            // Attach to member object for immediate collapsed view
+            return { ...member, category: memberData.category };
           } else {
             newMemberCategories[member.id] = null;
           }
@@ -338,7 +367,7 @@ export default function MembersSearchPage() {
       // Update all state at once
       setMemberStatuses(prev => ({ ...prev, ...newMemberStatuses }));
       setMemberCategories(prev => ({ ...prev, ...newMemberCategories }));
-      setMembers(updatedMembers);
+      return updatedMembers as SearchResult[];
     } catch (error) {
       console.error('Error loading batch statuses and categories:', error);
     }
@@ -479,7 +508,10 @@ export default function MembersSearchPage() {
           return;
         }
 
-        await loadMemberCategory(memberId);
+        // Update local state immediately
+        setMemberCategories(prev => ({ ...prev, [memberId]: null }));
+        setSelectedCategoryId(prev => ({ ...prev, [memberId]: '' }));
+        setMembers(prev => prev.map(m => m.id === memberId ? ({ ...m, category: undefined }) : m));
       } else {
         // Assign category
         const response = await fetch(`/api/members/${memberId}/category`, {
@@ -497,7 +529,21 @@ export default function MembersSearchPage() {
           return;
         }
 
-        await loadMemberCategory(memberId);
+        // Normalize and update local state immediately
+        const assignment = result.assignment;
+        const normalized = assignment ? {
+          ...assignment,
+          category_name: assignment.category?.name || assignment.category_name,
+        } : null;
+        if (normalized) {
+          setMemberCategories(prev => ({ ...prev, [memberId]: normalized }));
+          setSelectedCategoryId(prev => ({ ...prev, [memberId]: normalized.category_id }));
+          setMembers(prev => prev.map(m => m.id === memberId ? ({ ...m, category: normalized }) : m));
+        } else {
+          setMemberCategories(prev => ({ ...prev, [memberId]: null }));
+          setSelectedCategoryId(prev => ({ ...prev, [memberId]: '' }));
+          setMembers(prev => prev.map(m => m.id === memberId ? ({ ...m, category: undefined }) : m));
+        }
       }
       
       setSavingCategory(prev => ({ ...prev, [memberId]: false }));
@@ -817,7 +863,7 @@ export default function MembersSearchPage() {
                                 })()}
                               </button>
                               
-                              {/* Category Icon with Text - Visible for supervisors and team leaders, clickable for both */}
+                              {/* Category Icon with Text - Visible for supervisors and team leaders */}
                               {currentUser && (currentUser.role === 'supervisor' || currentUser.role === 'team_leader') && (
                                 <button
                                   onClick={(e) => {
@@ -831,18 +877,29 @@ export default function MembersSearchPage() {
                                   aria-label="عرض التصنيف"
                                   style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
                                 >
-                                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shadow-sm`} style={{ backgroundColor: memberCategories[member.id] ? '#2563eb' : '#000000' }}>
-                                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                    </svg>
-                                  </div>
-                                  {memberCategories[member.id]?.category_name ? (
-                                    <span className="text-xs text-gray-600 font-medium">
-                                      {memberCategories[member.id]!.category_name}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-gray-400">لا يوجد تصنيف</span>
-                                  )}
+                                  {(() => {
+                                    const catFromState = memberCategories[member.id] || null;
+                                    const catFromMember = (member as any).category || null;
+                                    const effectiveCat = catFromState || catFromMember;
+                                    const catName = effectiveCat?.category_name || (effectiveCat?.category_id ? (categories.find(c => c.id === effectiveCat.category_id)?.name) : undefined);
+                                    const hasCat = Boolean(effectiveCat && (catName || effectiveCat.category_id));
+                                    return (
+                                      <>
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shadow-sm`} style={{ backgroundColor: hasCat ? '#2563eb' : '#000000' }}>
+                                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                          </svg>
+                                        </div>
+                                        {hasCat ? (
+                                          <span className="text-xs text-gray-600 font-medium">
+                                            {catName || ''}
+                                          </span>
+                                        ) : (
+                                          <span className="text-xs text-gray-400">لا يوجد تصنيف</span>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
                                 </button>
                               )}
                             </div>

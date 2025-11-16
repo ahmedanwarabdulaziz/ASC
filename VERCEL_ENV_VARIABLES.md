@@ -70,3 +70,4 @@ After adding the variables and redeploying, verify:
 2. Test the application functionality (login, database operations)
 3. Check browser console for any Supabase connection errors
 
+

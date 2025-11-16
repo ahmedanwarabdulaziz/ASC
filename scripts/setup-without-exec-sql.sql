@@ -259,3 +259,4 @@ $$;
 SELECT 'Professional Arabic search setup completed!' AS message;
 
 
+

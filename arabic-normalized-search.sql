@@ -185,3 +185,4 @@ COMMENT ON FUNCTION normalize_arabic_for_search IS 'Normalizes Arabic text for s
 COMMENT ON FUNCTION search_members IS 'Professional Arabic search with character normalization: أ=ا, ى=ي, etc.';
 
 
+

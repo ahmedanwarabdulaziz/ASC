@@ -74,3 +74,4 @@ The search is automatically optimized:
 No additional configuration needed - just import your Excel file and start searching!
 
 
+

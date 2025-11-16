@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-// GET - Get all categories for the current user
+// GET - Get categories according to role
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies();
@@ -41,20 +41,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'المستخدم غير موجود' }, { status: 404 });
     }
 
-    // Only supervisors and leaders can have categories
-    if (userData.role !== 'supervisor' && userData.role !== 'team_leader') {
-      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 });
-    }
-
-    // Get user's categories with member counts
-    const { data: categories, error: categoriesError } = await supabaseAdmin
+    let categoriesQuery = supabaseAdmin
       .from('categories')
       .select(`
         *,
         assignments:member_category_assignments(count)
       `)
-      .eq('created_by', user.id)
       .order('created_at', { ascending: false });
+
+    if (userData.role === 'team_leader') {
+      categoriesQuery = categoriesQuery.eq('created_by', user.id);
+    } else if (userData.role === 'supervisor') {
+      // Supervisors should only see their own categories
+      categoriesQuery = categoriesQuery.eq('created_by', user.id);
+    } else if (userData.role === 'admin') {
+      // Admin can view all categories - no filter
+    } else {
+      // Other roles: no access
+      return NextResponse.json({ categories: [] });
+    }
+
+    const { data: categories, error: categoriesError } = await categoriesQuery;
 
     if (categoriesError) {
       console.error('Error fetching categories:', categoriesError);
@@ -312,5 +319,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'حدث خطأ غير متوقع' }, { status: 500 });
   }
 }
+
 
 

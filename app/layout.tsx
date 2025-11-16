@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     description: 'ناجح البارودي - مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي. نظام متطور ومحترف لإدارة فريق الانتخابات ومتابعة أعضائنا.',
     images: [
       {
-        url: '/img/nageh-hero.jpg',
+        url: '/img/Nageh%20thumb.jpg',
         width: 1200,
         height: 630,
         alt: 'ناجح البارودي - مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ناجح البارودي - مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي',
     description: 'ناجح البارودي - مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي. نظام متطور ومحترف لإدارة فريق الانتخابات ومتابعة أعضائنا.',
-    images: ['/img/nageh-hero.jpg'],
+    images: ['/img/Nageh%20thumb.jpg'],
   },
 }
 

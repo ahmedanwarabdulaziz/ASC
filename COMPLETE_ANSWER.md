@@ -128,3 +128,4 @@ The password (`Anw@r#2020`) is correct, but I need the complete connection strin
 - [ ] Then I can execute SQL automatically! 🚀
 
 
+

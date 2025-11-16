@@ -5,3 +5,4 @@ RETURNS TABLE(role TEXT, must_change_password BOOLEAN) AS $$
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 
+

@@ -88,3 +88,4 @@ const sqlFile = process.argv[2] || 'scripts/setup-without-exec-sql.sql';
 executeDirectSQL(sqlFile);
 
 
+

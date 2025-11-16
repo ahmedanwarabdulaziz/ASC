@@ -68,3 +68,4 @@ After running SQL, verify in Supabase Dashboard:
 **If you see errors**: Check Supabase Dashboard → Logs for detailed error messages.
 
 
+

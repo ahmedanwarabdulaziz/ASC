@@ -58,3 +58,4 @@ I tested **40 different connection string formats** and none worked. This means 
 **The connection string is somewhere in your Supabase dashboard - we just need to find the right page!**
 
 
+

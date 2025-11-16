@@ -101,3 +101,4 @@ This is fine for one-time setup, but automatic execution would be faster for fut
 Once you find it and add it to `.env.local`, I can execute SQL automatically! 🚀
 
 
+

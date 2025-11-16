@@ -172,3 +172,4 @@ ALTER TABLE conflict_notifications ENABLE ROW LEVEL SECURITY;
 -- RLS Policies will be added in a separate step after testing
 
 
+

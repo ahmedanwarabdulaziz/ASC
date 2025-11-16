@@ -249,3 +249,4 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION search_members IS 'Comprehensive search: searches original columns directly + normalized fields + tokens. Ensures no names are missed.';
 
 
+
