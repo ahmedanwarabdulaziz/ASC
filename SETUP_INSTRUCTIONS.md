@@ -69,3 +69,4 @@ After running SQL, verify in Supabase Dashboard:
 
 
 
+

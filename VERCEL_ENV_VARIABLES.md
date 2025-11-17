@@ -71,3 +71,4 @@ After adding the variables and redeploying, verify:
 3. Check browser console for any Supabase connection errors
 
 
+

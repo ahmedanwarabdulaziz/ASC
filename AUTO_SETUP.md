@@ -49,3 +49,4 @@ After setup, check Supabase Dashboard → Table Editor:
 
 
 
+

@@ -352,3 +352,4 @@ SELECT 'Professional Arabic search setup completed successfully!' AS message;
 
 
 
+

@@ -125,3 +125,56 @@ export interface Team {
   createdAt: Date;
 }
 
+// Blog types
+export interface SiteBio {
+  id: string;
+  bio_text: string;
+  vision_text?: string;
+  mission_text?: string;
+  updated_by?: string;
+  updated_at: string;
+}
+
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  content: string; // HTML
+  excerpt?: string;
+  author_id: string;
+  category_id?: string;
+  featured_image_url?: string;
+  thumbnail_image_url?: string;
+  meta_description?: string;
+  og_image_url?: string;
+  is_featured: boolean;
+  status: 'draft' | 'published';
+  published_at?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  author?: {
+    id: string;
+    email: string;
+    display_name?: string;
+  };
+  category?: BlogCategory;
+}
+
+export interface BlogPostImage {
+  id: string;
+  post_id: string;
+  image_url: string;
+  alt_text?: string;
+  order_index: number;
+  created_at: string;
+}
+

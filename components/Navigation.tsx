@@ -72,7 +72,7 @@ export default function Navigation() {
         public: true,
       },
       {
-        href: '/about',
+        href: '/blog',
         label: 'المزيد عن ناجح البارودي',
         iconType: 'home',
         public: true,
@@ -117,6 +117,13 @@ export default function Navigation() {
       // Admin only menu items
       if (currentUser.role === 'admin') {
         items.push({
+          href: '/dashboard/blog',
+          label: 'إدارة المدونة',
+          iconType: 'home',
+          public: false,
+          roles: ['admin'],
+        });
+        items.push({
           href: '/dashboard/conflicts',
           label: 'حل التعارضات',
           iconType: 'conflicts',
@@ -142,18 +149,19 @@ export default function Navigation() {
   }, [currentUser]);
 
   const getPageTitle = (): string => {
-    if (pathname === '/about') return 'المزيد عن ناجح البارودي';
+    if (pathname === '/blog' || pathname.startsWith('/blog/')) return 'المزيد عن ناجح البارودي';
     if (pathname === '/members') return 'البحث عن الأعضاء';
     if (pathname === '/dashboard') return 'لوحة التحكم';
     if (pathname === '/dashboard/my-voices') return 'أصواتي';
     if (pathname === '/dashboard/users') return 'إدارة المستخدمين';
+    if (pathname === '/dashboard/blog' || pathname.startsWith('/dashboard/blog/')) return 'إدارة المدونة';
     if (pathname === '/dashboard/conflicts') return 'حل تعارضات الحالات';
     if (pathname === '/dashboard/reports') return 'التقارير';
     return 'نادي ASC';
   };
 
   const getPageSubtitle = (): string => {
-    if (pathname === '/about') return 'مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي';
+    if (pathname === '/blog' || pathname.startsWith('/blog/')) return 'مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي';
     if (pathname === '/members') return 'نظام بحث متقدم باللغة العربية';
     if (pathname === '/dashboard/my-voices') return 'الأعضاء الذين قمت بتحديث حالتهم';
     if (pathname === '/dashboard/users') return 'إدارة المستخدمين والأدوار';
