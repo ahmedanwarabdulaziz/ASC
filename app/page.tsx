@@ -69,7 +69,7 @@ export default async function Home() {
                     دخول اعضاء الحملة الانتخابية
                   </button>
                 </Link>
-                <Link href="/about" className="inline-block">
+                <Link href="/blog" className="inline-block">
                   <button className="px-10 py-4 bg-transparent border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold text-lg rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
                     المزيد عن ناجح البارودي
                   </button>
