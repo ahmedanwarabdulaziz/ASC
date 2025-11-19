@@ -136,6 +136,128 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* Building List Section */}
+        <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
+          <div className="container mx-auto max-w-7xl">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
+                  قائمة بناء
+                </span>
+              </h2>
+              
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">
+                نبني اليوم لمستقبل يستحقه أعضاء النادي وأبناؤهم
+              </h3>
+              
+              <p className="text-white text-lg md:text-xl leading-relaxed max-w-4xl mx-auto text-right">
+                تأتي قائمة بناء لخوض انتخابات مجلس إدارة نادي أسيوط الرياضي إيمانًا منها بأن النادي هو بيت أعضائه، وأن الإصلاح والتطوير لا يتحققان إلا من خلال رؤية واضحة، وإدارة واعية، ومشاركة حقيقية من جميع الأعضاء. تسعى القائمة إلى إعادة القيمة الحقيقية للعضوية وتحسين الخدمات وتعظيم الموارد بما يليق بتاريخ النادي.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+              {/* Image on the left */}
+              <div className="order-2 lg:order-1">
+                <img
+                  src="/img/G-all.png"
+                  alt="قائمة بناء"
+                  className="w-full h-auto rounded-lg shadow-2xl"
+                />
+              </div>
+
+              {/* Content on the right */}
+              <div className="order-1 lg:order-2 text-right space-y-6">
+
+                <div className="mt-8 space-y-6">
+                  <h4 className="text-2xl md:text-3xl font-bold mb-4">
+                    <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
+                      المرشحون
+                    </span>
+                  </h4>
+
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-yellow-400 font-semibold text-lg mb-1">
+                        ناجح محمد عبد الوهاب البارودي
+                      </p>
+                      <p className="text-white text-sm">وشهرته ناجح البارودي - مقعد رئيس مجلس الإدارة</p>
+                    </div>
+
+                    <div>
+                      <p className="text-yellow-400 font-semibold text-lg mb-1">
+                        احمد بهجت محمود فراج عيسى
+                      </p>
+                      <p className="text-white text-sm">وشهرته بهجت فراج - مقعد نائب رئيس مجلس الإدارة</p>
+                    </div>
+
+                    <div>
+                      <p className="text-yellow-400 font-semibold text-lg mb-1">
+                        احمد طه عبد الصادق حسانين
+                      </p>
+                      <p className="text-white text-sm">وشهرته احمد طه - مقعد امين الصندوق</p>
+                    </div>
+
+                    <div className="mt-6">
+                      <p className="text-yellow-400 font-semibold text-lg mb-4">مقاعد الأعضاء:</p>
+                      <div className="space-y-3 pr-4">
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            ابوعلى حامد محمد المليجي
+                          </p>
+                          <p className="text-white text-sm">وشهرته ابوعلي حامد المليجي - مقعد عضو مجلس الادارة</p>
+                        </div>
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            احمد حمدي محمد جابر
+                          </p>
+                          <p className="text-white text-sm">وشهرته كابتن احمد حمدي - مقعد عضو مجلس الادارة</p>
+                        </div>
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            ريهام عبد الفتاح على رضا
+                          </p>
+                          <p className="text-white text-sm">وشهرتها ريهام عبد الفتاح غلاب السليني - مقعد عضو مجلس الادارة</p>
+                        </div>
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            محمود عبد العزيز محمود
+                          </p>
+                          <p className="text-white text-sm">وشهرته كابتن زيزو - مقعد عضو مجلس الادارة</p>
+                        </div>
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            هيثم عبد السلام احمد همام
+                          </p>
+                          <p className="text-white text-sm">وشهرته هيثم عبد السلام - مقعد عضو مجلس الادارة</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <p className="text-yellow-400 font-semibold text-lg mb-4">مقاعد الأعضاء تحت سن ٣٥:</p>
+                      <div className="space-y-3 pr-4">
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            محمود جمال عبد الرؤوف عبد العزيز
+                          </p>
+                          <p className="text-white text-sm">وشهرته محمود جمال عبد الرؤوف - مقعد عضو مجلس الاداره تحت السن</p>
+                        </div>
+                        <div>
+                          <p className="text-yellow-400 font-semibold text-base mb-1">
+                            مصطفى محمد حسين حسين
+                          </p>
+                          <p className="text-white text-sm">وشهرته مصطفى سليم - مقعد عضو مجلس الإدارة تحت السن</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Featured Gallery Section */}
         {featuredWithImages.length > 0 && (
           <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
