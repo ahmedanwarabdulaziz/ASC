@@ -118,7 +118,7 @@ export default function Navigation() {
       if (currentUser.role === 'admin') {
         items.push({
           href: '/dashboard/blog',
-          label: 'إدارة المدونة',
+          label: 'إدارة الصور',
           iconType: 'home',
           public: false,
           roles: ['admin'],
