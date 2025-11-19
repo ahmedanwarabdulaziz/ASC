@@ -72,7 +72,7 @@ export default function Navigation() {
         public: true,
       },
       {
-        href: '/blog',
+        href: '/about',
         label: 'المزيد عن ناجح البارودي',
         iconType: 'home',
         public: true,
@@ -149,6 +149,7 @@ export default function Navigation() {
   }, [currentUser]);
 
   const getPageTitle = (): string => {
+    if (pathname === '/about' || pathname.startsWith('/about/')) return 'المزيد عن ناجح البارودي';
     if (pathname === '/blog' || pathname.startsWith('/blog/')) return 'المزيد عن ناجح البارودي';
     if (pathname === '/members') return 'البحث عن الأعضاء';
     if (pathname === '/dashboard') return 'لوحة التحكم';
@@ -161,6 +162,7 @@ export default function Navigation() {
   };
 
   const getPageSubtitle = (): string => {
+    if (pathname === '/about' || pathname.startsWith('/about/')) return 'مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي';
     if (pathname === '/blog' || pathname.startsWith('/blog/')) return 'مرشح رئاسة مجلس ادارة نادي اسيوط الرياضي';
     if (pathname === '/members') return 'نظام بحث متقدم باللغة العربية';
     if (pathname === '/dashboard/my-voices') return 'الأعضاء الذين قمت بتحديث حالتهم';

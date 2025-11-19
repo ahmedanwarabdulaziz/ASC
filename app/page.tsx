@@ -51,7 +51,6 @@ export default async function Home() {
               className="w-full h-full object-cover"
             />
           </picture>
-          <div className="absolute inset-0 bg-black/60 z-[1]"></div>
           
           <div className="relative z-10 container mx-auto px-4 h-full flex items-center justify-center">
             <div className="text-center max-w-4xl pt-20 md:pt-32">
@@ -69,7 +68,7 @@ export default async function Home() {
                     دخول اعضاء الحملة الانتخابية
                   </button>
                 </Link>
-                <Link href="/blog" className="inline-block">
+                <Link href="/about" className="inline-block">
                   <button className="px-10 py-4 bg-transparent border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold text-lg rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
                     المزيد عن ناجح البارودي
                   </button>
