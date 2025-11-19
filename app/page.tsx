@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { supabaseAdmin } from '@/lib/supabase';
-import { BlogPost } from '@/types';
+import { BlogPost, BlogPostImage } from '@/types';
+import GalleryCard from '@/components/GalleryCard';
 
 async function getFeaturedPosts(): Promise<BlogPost[]> {
   try {
@@ -42,8 +43,30 @@ function formatArabicDate(dateString: string | undefined): string {
   }).format(date);
 }
 
+async function getPostImages(postId: string): Promise<BlogPostImage[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('blog_post_images')
+      .select('*')
+      .eq('post_id', postId)
+      .order('order_index', { ascending: true });
+    if (error) return [];
+    return (data || []) as BlogPostImage[];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
   const featuredPosts = await getFeaturedPosts();
+  
+  // Fetch secondary images for featured posts
+  const featuredWithImages = await Promise.all(
+    featuredPosts.map(async (post) => {
+      const images = await getPostImages(post.id);
+      return { post, images };
+    })
+  );
   return (
     <div className="min-h-screen bg-black" dir="rtl">
       <Navigation />
@@ -113,8 +136,8 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Featured Articles Section */}
-        {featuredPosts.length > 0 && (
+        {/* Featured Gallery Section */}
+        {featuredWithImages.length > 0 && (
           <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
             <div className="container mx-auto max-w-6xl">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
@@ -123,48 +146,14 @@ export default async function Home() {
                 </span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {featuredPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/blog/${post.id}`}
-                    className="bg-gray-900/50 border border-yellow-500/20 rounded-xl overflow-hidden hover:border-yellow-500/50 transition-all duration-300 transform hover:scale-105"
-                  >
-                    {(post.thumbnail_image_url || post.featured_image_url) && (
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img
-                          src={post.thumbnail_image_url || post.featured_image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        {post.is_featured && (
-                          <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded">
-                            مميز
-                          </span>
-                        )}
-                        {post.category && (
-                          <span className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded">
-                            {post.category.name}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-3">
-                        {post.title}
-                      </h3>
-                      <p className="text-white text-sm font-medium">
-                        {formatArabicDate(post.published_at || post.created_at)}
-                      </p>
-                    </div>
-                  </Link>
+                {featuredWithImages.map(({ post, images }) => (
+                  <GalleryCard key={post.id} post={post} secondaryImages={images} />
                 ))}
               </div>
               <div className="text-center">
                 <Link href="/blog" className="inline-block">
                   <button className="px-10 py-4 bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-700 hover:from-yellow-600 hover:via-yellow-700 hover:to-yellow-800 text-black font-bold text-lg rounded-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-400">
-                    عرض جميع المقالات
+                    عرض جميع الصور
                   </button>
                 </Link>
               </div>

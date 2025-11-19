@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { supabaseAdmin } from '@/lib/supabase';
-import { BlogPost } from '@/types';
+import { BlogPost, BlogPostImage } from '@/types';
+import GalleryCard from '@/components/GalleryCard';
 
 async function getFeaturedPosts(): Promise<BlogPost[]> {
   try {
@@ -114,9 +114,34 @@ export default async function About() {
   console.log(`Total featured posts: ${featuredPosts.length}`);
   console.log(`Total all posts: ${allPosts.length}`);
   
-  // Show all articles in the "جميع المقالات" section (including featured ones)
-  // Featured section shows only featured, "all articles" shows everything
-  const posts = allPosts;
+  // Fetch secondary images for all posts
+  async function getPostImages(postId: string): Promise<BlogPostImage[]> {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('blog_post_images')
+        .select('*')
+        .eq('post_id', postId)
+        .order('order_index', { ascending: true });
+      if (error) return [];
+      return (data || []) as BlogPostImage[];
+    } catch {
+      return [];
+    }
+  }
+
+  const featuredWithImages = await Promise.all(
+    featuredPosts.map(async (post) => {
+      const images = await getPostImages(post.id);
+      return { post, images };
+    })
+  );
+
+  const allPostsWithImages = await Promise.all(
+    allPosts.map(async (post) => {
+      const images = await getPostImages(post.id);
+      return { post, images };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-black" dir="rtl">
@@ -308,117 +333,47 @@ export default async function About() {
           </div>
         </section>
 
-        {/* Featured Articles Section */}
+        {/* Featured Gallery Section */}
         <section className="py-20 px-4 bg-black">
-            <div className="container mx-auto max-w-6xl">
-              <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-                <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                  شاركنا اهم الاحداث مع ناجح البارودي
-                </span>
-              </h2>
-              {featuredPosts.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-400 text-lg">لا توجد مقالات مميزة حالياً</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {featuredPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/blog/${post.id}`}
-                    className="bg-gray-900/50 border border-yellow-500/20 rounded-xl overflow-hidden hover:border-yellow-500/50 transition-all duration-300 transform hover:scale-105"
-                  >
-                    {(post.thumbnail_image_url || post.featured_image_url) && (
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img
-                          src={post.thumbnail_image_url || post.featured_image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        {post.is_featured && (
-                          <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded">
-                            مميز
-                          </span>
-                        )}
-                        {post.category && (
-                          <span className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded">
-                            {post.category.name}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-3">
-                        {post.title}
-                      </h3>
-                      <p className="text-white text-sm font-medium">
-                        {formatArabicDate(post.published_at || post.created_at)}
-                      </p>
-                    </div>
-                  </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+          <div className="container mx-auto max-w-6xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+              <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                شاركنا اهم الاحداث مع ناجح البارودي
+              </span>
+            </h2>
+            {featuredWithImages.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-400 text-lg">لا توجد صور مميزة حالياً</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredWithImages.map(({ post, images }) => (
+                  <GalleryCard key={post.id} post={post} secondaryImages={images} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
-        {/* All Articles Section */}
+        {/* All Gallery Section */}
         <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
           <div className="container mx-auto max-w-6xl">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
               <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                جميع المقالات
+                جميع الصور
               </span>
             </h2>
             
-            {posts.length === 0 ? (
+            {allPostsWithImages.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400 text-lg">لا توجد مقالات متاحة حالياً</p>
+                <p className="text-gray-400 text-lg">لا توجد صور متاحة حالياً</p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  {posts.map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/blog/${post.id}`}
-                      className="bg-gray-900/50 border border-yellow-500/20 rounded-xl overflow-hidden hover:border-yellow-500/50 transition-all duration-300 transform hover:scale-105"
-                    >
-                      {(post.thumbnail_image_url || post.featured_image_url) && (
-                        <div className="aspect-video w-full overflow-hidden">
-                          <img
-                            src={post.thumbnail_image_url || post.featured_image_url}
-                            alt={post.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          {post.is_featured && (
-                            <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded">
-                              مميز
-                            </span>
-                          )}
-                          {post.category && (
-                            <span className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded">
-                              {post.category.name}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-3">
-                          {post.title}
-                        </h3>
-                        <p className="text-white text-sm font-medium">
-                          {formatArabicDate(post.published_at || post.created_at)}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allPostsWithImages.map(({ post, images }) => (
+                  <GalleryCard key={post.id} post={post} secondaryImages={images} />
+                ))}
+              </div>
             )}
           </div>
         </section>

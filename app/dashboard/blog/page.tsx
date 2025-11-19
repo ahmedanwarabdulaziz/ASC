@@ -59,7 +59,7 @@ export default function BlogManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذه المقالة؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
 
     try {
       const { error } = await supabase
@@ -70,7 +70,7 @@ export default function BlogManagementPage() {
       if (error) throw error;
       await loadPosts();
     } catch (err: any) {
-      alert('حدث خطأ في حذف المقالة: ' + err.message);
+      alert('حدث خطأ في حذف الصورة: ' + err.message);
     }
   };
 
@@ -84,7 +84,7 @@ export default function BlogManagementPage() {
       if (error) throw error;
       await loadPosts();
     } catch (err: any) {
-      alert('حدث خطأ في تحديث المقالة: ' + err.message);
+      alert('حدث خطأ في تحديث الصورة: ' + err.message);
     }
   };
 
@@ -105,7 +105,7 @@ export default function BlogManagementPage() {
       if (error) throw error;
       await loadPosts();
     } catch (err: any) {
-      alert('حدث خطأ في تحديث المقالة: ' + err.message);
+      alert('حدث خطأ في تحديث الصورة: ' + err.message);
     }
   };
 
@@ -136,10 +136,10 @@ export default function BlogManagementPage() {
       <Navigation />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">إدارة المدونة</h1>
+          <h1 className="text-3xl font-bold text-white">إدارة الصور</h1>
           <Link href="/dashboard/blog/new">
             <Button className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black">
-              مقالة جديدة
+              صورة جديدة
             </Button>
           </Link>
         </div>
@@ -166,7 +166,7 @@ export default function BlogManagementPage() {
                 {posts.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-gray-300">
-                      لا توجد مقالات بعد
+                      لا توجد صور بعد
                     </td>
                   </tr>
                 ) : (

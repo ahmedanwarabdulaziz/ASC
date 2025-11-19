@@ -145,6 +145,7 @@ export interface BlogCategory {
 }
 
 export interface BlogPost {
+  primary_image_title?: string; // Title for the primary/featured image
   id: string;
   title: string;
   content: string; // HTML

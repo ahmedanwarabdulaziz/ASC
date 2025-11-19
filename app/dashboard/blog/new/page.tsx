@@ -19,23 +19,20 @@ export default function NewPostPage() {
 
   const [formData, setFormData] = useState({
     title: '',
-    content: '',
-    excerpt: '',
+    content: '', // Optional now - gallery focused
     category_id: '',
-    featured_image_url: '',
-    thumbnail_image_url: '',
+    featured_image_url: '', // Primary image
+    primary_image_title: '', // Title for primary image
     meta_description: '',
     og_image_url: '',
     is_featured: false,
-    status: 'draft' as 'draft' | 'published',
-    published_at: '', // Custom date for old articles
+    status: 'published' as 'draft' | 'published',
+    published_at: new Date().toISOString().split('T')[0], // Default to today's date
   });
 
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
-  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [uploadingContent, setUploadingContent] = useState(false);
   const featuredFileInputRef = useRef<HTMLInputElement>(null);
-  const thumbnailFileInputRef = useRef<HTMLInputElement>(null);
   const contentImagesFileInputRef = useRef<HTMLInputElement>(null);
   
   // Multiple images for article content
@@ -94,23 +91,6 @@ export default function NewPostPage() {
     }
   };
 
-  const handleThumbnailImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setUploadingThumbnail(true);
-      const url = await uploadBlogImage(file, 'thumbnails');
-      setFormData({ ...formData, thumbnail_image_url: url });
-    } catch (err: any) {
-      setError(err.message || 'فشل رفع الصورة المصغرة');
-    } finally {
-      setUploadingThumbnail(false);
-      if (thumbnailFileInputRef.current) {
-        thumbnailFileInputRef.current.value = '';
-      }
-    }
-  };
 
   const handleContentImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -161,28 +141,33 @@ export default function NewPostPage() {
       setSaving(true);
       setError('');
 
-      // Determine published_at date
-      let publishedAt: string | null = null;
-      if (formData.status === 'published') {
-        if (formData.published_at) {
-          // Use custom date if provided
-          publishedAt = new Date(formData.published_at).toISOString();
-        } else {
-          // Use current date if no custom date
-          publishedAt = new Date().toISOString();
-        }
+      // Determine published_at date - always use the date from form (defaults to today)
+      const publishedAt = formData.published_at 
+        ? new Date(formData.published_at + 'T00:00:00').toISOString()
+        : new Date().toISOString();
+
+      // Validate primary image is required
+      if (!formData.featured_image_url) {
+        setError('الصورة الأساسية مطلوبة');
+        setSaving(false);
+        return;
       }
 
       const postData: any = {
-        ...formData,
+        title: formData.title,
+        content: formData.content || '', // Optional content
+        excerpt: '',
         author_id: currentUser.id,
         category_id: formData.category_id || null,
+        featured_image_url: formData.featured_image_url,
+        primary_image_title: formData.primary_image_title || null,
+        thumbnail_image_url: formData.featured_image_url, // Always use primary image as thumbnail
+        meta_description: formData.meta_description || '',
+        og_image_url: formData.og_image_url || formData.featured_image_url,
+        is_featured: formData.is_featured,
+        status: formData.status,
         published_at: publishedAt,
       };
-
-      // Remove published_at from formData (it's not a column)
-      delete postData.published_at;
-      postData.published_at = publishedAt;
 
       // Insert post
       const { data: postResult, error: postError } = await supabase
@@ -234,8 +219,8 @@ export default function NewPostPage() {
       <Navigation />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">مقالة جديدة</h1>
-          <p className="text-gray-400">قم بإنشاء مقالة جديدة</p>
+          <h1 className="text-3xl font-bold text-white mb-2">صورة جديدة</h1>
+          <p className="text-gray-400">قم بإضافة صورة جديدة</p>
         </div>
 
         {error && (
@@ -257,76 +242,93 @@ export default function NewPostPage() {
           </div>
 
           <div>
-            <label className="block text-white font-semibold mb-2">المحتوى *</label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500"
-              rows={15}
-              required
-              placeholder="اكتب محتوى المقالة هنا... (سيتم استبدال هذا بمحرر نصوص متقدم قريباً)"
-            />
-            <p className="text-gray-500 text-sm mt-2">ملاحظة: سيتم استبدال هذا الحقل بمحرر نصوص متقدم (TipTap) قريباً</p>
+            <label className="block text-white font-semibold mb-2">التصنيف</label>
+            <select
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black focus:outline-none focus:border-yellow-500"
+            >
+              <option value="">بدون تصنيف</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
-            <label className="block text-white font-semibold mb-2">الملخص</label>
-            <textarea
-              value={formData.excerpt}
-              onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+            <label className="block text-white font-semibold mb-2">تاريخ النشر</label>
+            <input
+              type="date"
+              value={formData.published_at}
+              onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
               className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500"
-              rows={3}
-              placeholder="ملخص قصير للمقالة (يظهر في البطاقات)"
             />
+            <p className="text-gray-500 text-sm mt-2">تاريخ النشر (افتراضياً: اليوم)</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-white font-semibold mb-2">التصنيف</label>
-              <select
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black focus:outline-none focus:border-yellow-500"
-              >
-                <option value="">بدون تصنيف</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-white font-semibold mb-2">الحالة</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'published' })}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black focus:outline-none focus:border-yellow-500"
-              >
-                <option value="draft">مسودة</option>
-                <option value="published">منشور</option>
-              </select>
+          {/* Primary Image Section */}
+          <div className="bg-gray-800/50 border border-yellow-500/30 rounded-xl p-6">
+            <label className="block text-white font-semibold mb-4 text-xl">
+              الصورة الأساسية *
+            </label>
+            <input
+              ref={featuredFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFeaturedImageUpload}
+              className="hidden"
+            />
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={() => featuredFileInputRef.current?.click()}
+                  disabled={uploadingFeatured}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {uploadingFeatured ? 'جاري الرفع...' : 'رفع الصورة الأساسية'}
+                </Button>
+                {formData.featured_image_url && (
+                  <div className="flex-1">
+                    <img
+                      src={formData.featured_image_url}
+                      alt="Preview"
+                      className="h-32 w-auto rounded border border-gray-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, featured_image_url: '', primary_image_title: '' })}
+                      className="text-red-400 text-sm mt-1"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                )}
+              </div>
+              {formData.featured_image_url && (
+                <div>
+                  <label className="block text-white font-medium mb-2">عنوان الصورة الأساسية (اختياري)</label>
+                  <input
+                    type="text"
+                    value={formData.primary_image_title}
+                    onChange={(e) => setFormData({ ...formData, primary_image_title: e.target.value })}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500"
+                    placeholder="مثال: لقاء مع ناجح البارودي في المؤتمر"
+                  />
+                  <p className="text-gray-500 text-sm mt-2">عنوان يظهر مع الصورة الأساسية</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {formData.status === 'published' && (
-            <div>
-              <label className="block text-white font-semibold mb-2">تاريخ النشر (للمقالات القديمة)</label>
-              <input
-                type="datetime-local"
-                value={formData.published_at}
-                onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500"
-                placeholder="اتركه فارغاً لاستخدام التاريخ الحالي"
-              />
-              <p className="text-gray-500 text-sm mt-2">اتركه فارغاً لاستخدام التاريخ الحالي، أو اختر تاريخاً للمقالات القديمة</p>
-            </div>
-          )}
-
-          {/* Multiple Images Section */}
-          <div>
-            <label className="block text-white font-semibold mb-2">صور المقالة (يمكن رفع عدة صور)</label>
+          {/* Secondary Images Section */}
+          <div className="bg-gray-800/30 border border-yellow-500/20 rounded-xl p-6">
+            <label className="block text-white font-semibold mb-4 text-xl">
+              الصور الثانوية (اختياري)
+            </label>
+            <p className="text-gray-400 text-sm mb-4">يمكنك رفع صور إضافية لعرضها في المعرض</p>
             <input
               ref={contentImagesFileInputRef}
               type="file"
@@ -379,107 +381,6 @@ export default function NewPostPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-white font-semibold mb-2">الصورة المميزة</label>
-              <input
-                ref={featuredFileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFeaturedImageUpload}
-                className="hidden"
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={() => featuredFileInputRef.current?.click()}
-                  disabled={uploadingFeatured}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {uploadingFeatured ? 'جاري الرفع...' : 'رفع صورة'}
-                </Button>
-                {formData.featured_image_url && (
-                  <div className="flex-1">
-                    <img
-                      src={formData.featured_image_url}
-                      alt="Preview"
-                      className="h-20 w-auto rounded border border-gray-700"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, featured_image_url: '' })}
-                      className="text-red-400 text-sm mt-1"
-                    >
-                      حذف
-                    </button>
-                  </div>
-                )}
-              </div>
-              <input
-                type="url"
-                value={formData.featured_image_url}
-                onChange={(e) => setFormData({ ...formData, featured_image_url: e.target.value })}
-                className="w-full mt-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500 text-sm"
-                placeholder="أو أدخل الرابط يدوياً"
-              />
-            </div>
-
-            <div>
-              <label className="block text-white font-semibold mb-2">الصورة المصغرة</label>
-              <input
-                ref={thumbnailFileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleThumbnailImageUpload}
-                className="hidden"
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={() => thumbnailFileInputRef.current?.click()}
-                  disabled={uploadingThumbnail}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {uploadingThumbnail ? 'جاري الرفع...' : 'رفع صورة'}
-                </Button>
-                {formData.thumbnail_image_url && (
-                  <div className="flex-1">
-                    <img
-                      src={formData.thumbnail_image_url}
-                      alt="Preview"
-                      className="h-20 w-auto rounded border border-gray-700"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, thumbnail_image_url: '' })}
-                      className="text-red-400 text-sm mt-1"
-                    >
-                      حذف
-                    </button>
-                  </div>
-                )}
-              </div>
-              <input
-                type="url"
-                value={formData.thumbnail_image_url}
-                onChange={(e) => setFormData({ ...formData, thumbnail_image_url: e.target.value })}
-                className="w-full mt-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500 text-sm"
-                placeholder="أو أدخل الرابط يدوياً"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-white font-semibold mb-2">وصف SEO</label>
-            <textarea
-              value={formData.meta_description}
-              onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-yellow-500"
-              rows={2}
-              placeholder="وصف قصير للمقالة (للمحركات البحث)"
-            />
-          </div>
-
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -488,7 +389,7 @@ export default function NewPostPage() {
                 onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                 className="w-5 h-5 rounded border-gray-700 bg-gray-800 text-yellow-500 focus:ring-yellow-500"
               />
-              <span className="text-white">مقال مميز</span>
+              <span className="text-white">صورة مميزه</span>
             </label>
           </div>
 

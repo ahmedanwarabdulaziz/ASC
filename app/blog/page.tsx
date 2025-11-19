@@ -1,23 +1,7 @@
-import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { supabaseAdmin } from '@/lib/supabase';
-import { BlogPost, SiteBio, BlogCategory } from '@/types';
-
-async function getBio(): Promise<SiteBio | null> {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('site_bio')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error || !data) return null;
-    return data as SiteBio;
-  } catch {
-    return null;
-  }
-}
+import { BlogPost, BlogPostImage } from '@/types';
+import GalleryCard from '@/components/GalleryCard';
 
 async function getFeaturedPosts(): Promise<BlogPost[]> {
   try {
@@ -40,26 +24,42 @@ async function getFeaturedPosts(): Promise<BlogPost[]> {
   }
 }
 
-async function getAllPosts(page: number = 1, limit: number = 10): Promise<{ posts: BlogPost[]; total: number }> {
+async function getAllPosts(): Promise<BlogPost[]> {
   try {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('blog_posts')
       .select(`
         *,
         author:users(id, email, display_name),
         category:blog_categories(*)
-      `, { count: 'exact' })
+      `)
       .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .range(from, to);
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
 
-    if (error) return { posts: [], total: 0 };
-    return { posts: (data || []) as BlogPost[], total: count || 0 };
+    if (error) {
+      console.error('Error fetching posts:', error);
+      return [];
+    }
+    return (data || []) as BlogPost[];
+  } catch (err) {
+    console.error('Exception fetching posts:', err);
+    return [];
+  }
+}
+
+async function getPostImages(postId: string): Promise<any[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('blog_post_images')
+      .select('*')
+      .eq('post_id', postId)
+      .order('order_index', { ascending: true });
+
+    if (error) return [];
+    return (data || []);
   } catch {
-    return { posts: [], total: 0 };
+    return [];
   }
 }
 
@@ -74,16 +74,27 @@ function formatArabicDate(dateString: string | undefined): string {
   }).format(date);
 }
 
-export default async function BlogPage({
-  searchParams,
-}: {
-  searchParams: { page?: string };
-}) {
-  const page = parseInt(searchParams.page || '1', 10);
-  const bio = await getBio();
+export default async function BlogPage() {
   const featuredPosts = await getFeaturedPosts();
-  const { posts, total } = await getAllPosts(page, 10);
-  const totalPages = Math.ceil(total / 10);
+  const allPosts = await getAllPosts();
+  
+  // Fetch secondary images for all posts
+  const postsWithImages = await Promise.all(
+    allPosts.map(async (post) => {
+      const images = await getPostImages(post.id);
+      return { post, images: images as BlogPostImage[] };
+    })
+  );
+
+  // Separate featured and regular posts
+  const featuredPostIds = new Set(featuredPosts.map(p => p.id));
+  const regularPosts = postsWithImages.filter(({ post }) => !featuredPostIds.has(post.id));
+  const featuredWithImages = await Promise.all(
+    featuredPosts.map(async (post) => {
+      const images = await getPostImages(post.id);
+      return { post, images: images as BlogPostImage[] };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-black" dir="rtl">
@@ -115,52 +126,8 @@ export default async function BlogPage({
           </div>
         </section>
 
-        {/* Bio Section */}
-        {bio && (
-          <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
-            <div className="container mx-auto max-w-4xl">
-              <div className="bg-gray-900/50 border border-yellow-500/20 rounded-2xl p-8 md:p-12 shadow-2xl">
-                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-                  <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                    من هو ناجح البارودي
-                  </span>
-                </h2>
-                
-                <div className="space-y-6 text-gray-300 text-lg leading-relaxed">
-                  <p className="text-xl text-white font-semibold">
-                    {bio.bio_text}
-                  </p>
-                </div>
-              </div>
-
-              {/* Vision & Mission Cards */}
-              {(bio.vision_text || bio.mission_text) && (
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {bio.vision_text && (
-                    <div className="bg-gray-900/50 border border-yellow-500/20 rounded-xl p-8 hover:border-yellow-500/50 transition-all duration-300">
-                      <h3 className="text-2xl font-bold text-yellow-500 mb-4">رؤيتنا</h3>
-                      <p className="text-white leading-relaxed">
-                        {bio.vision_text}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {bio.mission_text && (
-                    <div className="bg-gray-900/50 border border-yellow-500/20 rounded-xl p-8 hover:border-yellow-500/50 transition-all duration-300">
-                      <h3 className="text-2xl font-bold text-yellow-500 mb-4">رسالتنا</h3>
-                      <p className="text-white leading-relaxed">
-                        {bio.mission_text}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* Featured Articles Section */}
-        {featuredPosts.length > 0 && (
+        {/* Featured Gallery Section */}
+        {featuredWithImages.length > 0 && (
           <section className="py-20 px-4 bg-black">
             <div className="container mx-auto max-w-6xl">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
@@ -169,128 +136,33 @@ export default async function BlogPage({
                 </span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {featuredPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/blog/${post.id}`}
-                    className="bg-gray-900/50 border border-yellow-500/20 rounded-xl overflow-hidden hover:border-yellow-500/50 transition-all duration-300 transform hover:scale-105"
-                  >
-                    {(post.thumbnail_image_url || post.featured_image_url) && (
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img
-                          src={post.thumbnail_image_url || post.featured_image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        {post.is_featured && (
-                          <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded">
-                            مميز
-                          </span>
-                        )}
-                        {post.category && (
-                          <span className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded">
-                            {post.category.name}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-3">
-                        {post.title}
-                      </h3>
-                      <p className="text-white text-sm font-medium">
-                        {formatArabicDate(post.published_at || post.created_at)}
-                      </p>
-                    </div>
-                  </Link>
+                {featuredWithImages.map(({ post, images }) => (
+                  <GalleryCard key={post.id} post={post} secondaryImages={images} />
                 ))}
               </div>
             </div>
           </section>
         )}
 
-        {/* All Articles Section */}
+        {/* All Gallery Section */}
         <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
           <div className="container mx-auto max-w-6xl">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
               <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                جميع المقالات
+                جميع الصور
               </span>
             </h2>
             
-            {posts.length === 0 ? (
+            {regularPosts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-400 text-lg">لا توجد مقالات متاحة حالياً</p>
+                <p className="text-gray-400 text-lg">لا توجد صور متاحة حالياً</p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  {posts.map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/blog/${post.id}`}
-                      className="bg-gray-900/50 border border-yellow-500/20 rounded-xl overflow-hidden hover:border-yellow-500/50 transition-all duration-300 transform hover:scale-105"
-                    >
-                      {(post.thumbnail_image_url || post.featured_image_url) && (
-                        <div className="aspect-video w-full overflow-hidden">
-                          <img
-                            src={post.thumbnail_image_url || post.featured_image_url}
-                            alt={post.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          {post.is_featured && (
-                            <span className="px-2 py-1 text-xs font-bold bg-yellow-500/20 text-yellow-400 rounded">
-                              مميز
-                            </span>
-                          )}
-                          {post.category && (
-                            <span className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded">
-                              {post.category.name}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-3">
-                          {post.title}
-                        </h3>
-                        <p className="text-white text-sm font-medium">
-                          {formatArabicDate(post.published_at || post.created_at)}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-4">
-                    {page > 1 && (
-                      <Link
-                        href={`/blog?page=${page - 1}`}
-                        className="px-6 py-3 bg-gray-900/50 border border-yellow-500/20 text-yellow-400 rounded-lg hover:border-yellow-500/50 transition-all"
-                      >
-                        السابق
-                      </Link>
-                    )}
-                    <span className="text-gray-400">
-                      صفحة {page} من {totalPages}
-                    </span>
-                    {page < totalPages && (
-                      <Link
-                        href={`/blog?page=${page + 1}`}
-                        className="px-6 py-3 bg-gray-900/50 border border-yellow-500/20 text-yellow-400 rounded-lg hover:border-yellow-500/50 transition-all"
-                      >
-                        التالي
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {regularPosts.map(({ post, images }) => (
+                  <GalleryCard key={post.id} post={post} secondaryImages={images} />
+                ))}
+              </div>
             )}
           </div>
         </section>
