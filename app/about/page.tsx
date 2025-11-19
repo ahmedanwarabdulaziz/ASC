@@ -184,7 +184,7 @@ export default async function About({
                 </div>
                 <div>
                   <div className="w-full aspect-square bg-gray-800 rounded-xl flex items-center justify-center border border-yellow-500/20 overflow-hidden">
-                    <img src="/img/N5.png" alt="الاستثمار والصناعة" className="w-full h-full object-contain rounded-xl" />
+                    <img src="/img/n5.png" alt="الاستثمار والصناعة" className="w-full h-full object-contain rounded-xl" />
                   </div>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default async function About({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div>
                   <div className="w-full aspect-square bg-gray-800 rounded-xl flex items-center justify-center border border-yellow-500/20 overflow-hidden">
-                    <img src="/img/N6.png" alt="المشروعات السياحية والفندقية" className="w-full h-full object-contain rounded-xl" />
+                    <img src="/img/n6.png" alt="المشروعات السياحية والفندقية" className="w-full h-full object-contain rounded-xl" />
                   </div>
                 </div>
                 <div>
@@ -233,7 +233,7 @@ export default async function About({
                 </div>
                 <div>
                   <div className="w-full aspect-square bg-gray-800 rounded-xl flex items-center justify-center border border-yellow-500/20 overflow-hidden">
-                    <img src="/img/N8.png" alt="العمل العام والمسؤولية المجتمعية" className="w-full h-full object-contain rounded-xl" />
+                    <img src="/img/n8.png" alt="العمل العام والمسؤولية المجتمعية" className="w-full h-full object-contain rounded-xl" />
                   </div>
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default async function About({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div>
                   <div className="w-full aspect-square bg-gray-800 rounded-xl flex items-center justify-center border border-yellow-500/20 overflow-hidden">
-                    <img src="/img/N7.png" alt="علامة إعلامية وشخصية عامة" className="w-full h-full object-contain rounded-xl" />
+                    <img src="/img/n7.png" alt="علامة إعلامية وشخصية عامة" className="w-full h-full object-contain rounded-xl" />
                   </div>
                 </div>
                 <div>
