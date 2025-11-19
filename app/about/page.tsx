@@ -14,12 +14,20 @@ async function getFeaturedPosts(): Promise<BlogPost[]> {
       `)
       .eq('status', 'published')
       .eq('is_featured', true)
-      .order('published_at', { ascending: false })
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .limit(8);
 
-    if (error || !data) return [];
+    if (error) {
+      console.error('Error fetching featured posts:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return [];
+    }
+    if (!data) return [];
+    console.log(`Fetched ${data.length} featured posts`);
     return data as BlogPost[];
-  } catch {
+  } catch (err) {
+    console.error('Exception fetching featured posts:', err);
     return [];
   }
 }
@@ -29,20 +37,60 @@ async function getAllPosts(page: number = 1, limit: number = 10): Promise<{ post
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data, error, count } = await supabaseAdmin
+    // First, get the count separately to avoid issues with joins
+    const { count, error: countError } = await supabaseAdmin
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published');
+
+    if (countError) {
+      console.error('Error counting posts:', countError);
+    }
+
+    // Fetch posts - try with joins, but handle errors gracefully
+    const { data, error } = await supabaseAdmin
       .from('blog_posts')
       .select(`
         *,
         author:users(id, email, display_name),
         category:blog_categories(*)
-      `, { count: 'exact' })
+      `)
       .eq('status', 'published')
-      .order('published_at', { ascending: false })
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .range(from, to);
 
-    if (error) return { posts: [], total: 0 };
+    if (error) {
+      console.error('Error fetching all posts:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      // Fallback: try without joins
+      console.log('Attempting fallback query without joins...');
+      const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+        .from('blog_posts')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      
+      if (fallbackError) {
+        console.error('Fallback query also failed:', fallbackError);
+        return { posts: [], total: count || 0 };
+      }
+      
+      console.log(`Fallback: Fetched ${fallbackData?.length || 0} published posts (total: ${count || 0})`);
+      // Manually enrich with author and category data if needed
+      return { posts: (fallbackData || []) as BlogPost[], total: count || 0 };
+    }
+    
+    console.log(`Fetched ${data?.length || 0} published posts (total: ${count || 0})`);
+    if (data && data.length > 0) {
+      console.log('Sample post:', JSON.stringify(data[0], null, 2));
+    }
     return { posts: (data || []) as BlogPost[], total: count || 0 };
-  } catch {
+  } catch (err) {
+    console.error('Exception fetching all posts:', err);
     return { posts: [], total: 0 };
   }
 }
@@ -64,6 +112,24 @@ export default async function About({
   searchParams: { page?: string };
 }) {
   const page = parseInt(searchParams.page || '1', 10);
+  
+  // Debug: Check all posts in database
+  const { data: allPostsDebug, error: debugError } = await supabaseAdmin
+    .from('blog_posts')
+    .select('id, title, status, published_at, is_featured')
+    .order('created_at', { ascending: false });
+  
+  if (!debugError && allPostsDebug) {
+    console.log('=== DEBUG: All posts in database ===');
+    console.log(`Total posts: ${allPostsDebug.length}`);
+    console.log('Published posts:', allPostsDebug.filter(p => p.status === 'published').length);
+    console.log('Draft posts:', allPostsDebug.filter(p => p.status === 'draft').length);
+    allPostsDebug.forEach((post: any) => {
+      console.log(`- ${post.title}: status=${post.status}, published_at=${post.published_at}, featured=${post.is_featured}`);
+    });
+    console.log('=====================================');
+  }
+  
   const featuredPosts = await getFeaturedPosts();
   const { posts, total } = await getAllPosts(page, 10);
   const totalPages = Math.ceil(total / 10);
