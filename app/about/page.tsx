@@ -15,8 +15,7 @@ async function getFeaturedPosts(): Promise<BlogPost[]> {
       .eq('status', 'published')
       .eq('is_featured', true)
       .order('published_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(8);
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching featured posts:', error);
@@ -32,22 +31,9 @@ async function getFeaturedPosts(): Promise<BlogPost[]> {
   }
 }
 
-async function getAllPosts(page: number = 1, limit: number = 10): Promise<{ posts: BlogPost[]; total: number }> {
+async function getAllPosts(): Promise<BlogPost[]> {
   try {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    // First, get the count separately to avoid issues with joins
-    const { count, error: countError } = await supabaseAdmin
-      .from('blog_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'published');
-
-    if (countError) {
-      console.error('Error counting posts:', countError);
-    }
-
-    // Fetch posts - try with joins, but handle errors gracefully
+    // Fetch all published posts - no pagination
     const { data, error } = await supabaseAdmin
       .from('blog_posts')
       .select(`
@@ -57,8 +43,7 @@ async function getAllPosts(page: number = 1, limit: number = 10): Promise<{ post
       `)
       .eq('status', 'published')
       .order('published_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .range(from, to);
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching all posts:', error);
@@ -71,27 +56,25 @@ async function getAllPosts(page: number = 1, limit: number = 10): Promise<{ post
         .select('*')
         .eq('status', 'published')
         .order('published_at', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        .order('created_at', { ascending: false });
       
       if (fallbackError) {
         console.error('Fallback query also failed:', fallbackError);
-        return { posts: [], total: count || 0 };
+        return [];
       }
       
-      console.log(`Fallback: Fetched ${fallbackData?.length || 0} published posts (total: ${count || 0})`);
-      // Manually enrich with author and category data if needed
-      return { posts: (fallbackData || []) as BlogPost[], total: count || 0 };
+      console.log(`Fallback: Fetched ${fallbackData?.length || 0} published posts`);
+      return (fallbackData || []) as BlogPost[];
     }
     
-    console.log(`Fetched ${data?.length || 0} published posts (total: ${count || 0})`);
+    console.log(`Fetched ${data?.length || 0} published posts`);
     if (data && data.length > 0) {
       console.log('Sample post:', JSON.stringify(data[0], null, 2));
     }
-    return { posts: (data || []) as BlogPost[], total: count || 0 };
+    return (data || []) as BlogPost[];
   } catch (err) {
     console.error('Exception fetching all posts:', err);
-    return { posts: [], total: 0 };
+    return [];
   }
 }
 
@@ -106,12 +89,7 @@ function formatArabicDate(dateString: string | undefined): string {
   }).format(date);
 }
 
-export default async function About({
-  searchParams,
-}: {
-  searchParams: { page?: string };
-}) {
-  const page = parseInt(searchParams.page || '1', 10);
+export default async function About() {
   
   // Debug: Check all posts in database
   const { data: allPostsDebug, error: debugError } = await supabaseAdmin
@@ -131,8 +109,14 @@ export default async function About({
   }
   
   const featuredPosts = await getFeaturedPosts();
-  const { posts, total } = await getAllPosts(page, 10);
-  const totalPages = Math.ceil(total / 10);
+  const allPosts = await getAllPosts();
+  
+  console.log(`Total featured posts: ${featuredPosts.length}`);
+  console.log(`Total all posts: ${allPosts.length}`);
+  
+  // Show all articles in the "جميع المقالات" section (including featured ones)
+  // Featured section shows only featured, "all articles" shows everything
+  const posts = allPosts;
 
   return (
     <div className="min-h-screen bg-black" dir="rtl">
@@ -325,16 +309,20 @@ export default async function About({
         </section>
 
         {/* Featured Articles Section */}
-        {featuredPosts.length > 0 && (
-          <section className="py-20 px-4 bg-black">
+        <section className="py-20 px-4 bg-black">
             <div className="container mx-auto max-w-6xl">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
                 <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
                   شاركنا اهم الاحداث مع ناجح البارودي
                 </span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {featuredPosts.map((post) => (
+              {featuredPosts.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg">لا توجد مقالات مميزة حالياً</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {featuredPosts.map((post) => (
                   <Link
                     key={post.id}
                     href={`/blog/${post.id}`}
@@ -370,11 +358,11 @@ export default async function About({
                       </p>
                     </div>
                   </Link>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
-        )}
 
         {/* All Articles Section */}
         <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
@@ -430,31 +418,6 @@ export default async function About({
                     </Link>
                   ))}
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-4">
-                    {page > 1 && (
-                      <Link
-                        href={`/about?page=${page - 1}`}
-                        className="px-6 py-3 bg-gray-900/50 border border-yellow-500/20 text-yellow-400 rounded-lg hover:border-yellow-500/50 transition-all"
-                      >
-                        السابق
-                      </Link>
-                    )}
-                    <span className="text-gray-400">
-                      صفحة {page} من {totalPages}
-                    </span>
-                    {page < totalPages && (
-                      <Link
-                        href={`/about?page=${page + 1}`}
-                        className="px-6 py-3 bg-gray-900/50 border border-yellow-500/20 text-yellow-400 rounded-lg hover:border-yellow-500/50 transition-all"
-                      >
-                        التالي
-                      </Link>
-                    )}
-                  </div>
-                )}
               </>
             )}
           </div>
