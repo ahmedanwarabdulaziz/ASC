@@ -14,12 +14,19 @@ async function getFeaturedPosts(): Promise<BlogPost[]> {
       `)
       .eq('status', 'published')
       .eq('is_featured', true)
-      .order('published_at', { ascending: false })
-      .limit(8);
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
 
-    if (error || !data) return [];
+    if (error) {
+      console.error('Error fetching featured posts:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return [];
+    }
+    if (!data) return [];
+    console.log(`Fetched ${data.length} featured posts`);
     return data as BlogPost[];
-  } catch {
+  } catch (err) {
+    console.error('Exception fetching featured posts:', err);
     return [];
   }
 }
