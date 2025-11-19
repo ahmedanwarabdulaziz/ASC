@@ -108,34 +108,6 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Why Section */}
-        <section className="py-20 px-4 bg-black">
-          <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-              <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
-                لماذا ناجح البارودي
-              </span>
-            </h2>
-            <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-12 leading-tight">
-              لرئاسة نادي اسيوط الرياضي
-            </h3>
-            
-            <div className="text-right space-y-6 text-white text-lg md:text-xl leading-relaxed">
-              <p className="text-gray-200">
-                في ظل المرحلة الحرجة التي يمر بها نادي أسيوط الرياضي، يؤمن ناجح البارودي بأن الحفاظ على تاريخ هذا النادي العريق مسؤولية جماعية تستند إلى الإخلاص والمثابرة والإصرار. ومن هذا المنطلق، قرر الترشح لرئاسة مجلس إدارة النادي، واضعًا نصب عينيه هدفًا واضحًا: إعادة نادي أسيوط إلى مكانته المرموقة ومجده الرياضي والثقافي.
-              </p>
-              
-              <p className="text-gray-200">
-                يرى ناجح البارودي أن قضية "أرض النادي" تمثل حجر الأساس لأي مسار إصلاحي أو تطويري، وأن معالجتها تمثل الخطوة الأولى نحو مستقبل أكثر استقرارًا واستدامة. لذلك جعل من إنهاء مشكلة سحب أرض النادي وسداد المتأخرات المالية أولوية قصوى ضمن برنامجه الانتخابي.
-              </p>
-              
-              <p className="text-gray-200">
-                يؤمن ناجح بأن النجاح لا يتحقق إلا بالعمل المنظم والرؤية الواضحة، وقد اطّلع بعناية على جميع البرامج والمقترحات الانتخابية للمرشحين الآخرين، مقدّرًا ما تحمله من أفكار طموحة تستشرف مستقبلًا واعدًا للنادي خلال السنوات القادمة. ومع ذلك، فهو يرى أن جميع تلك المبادرات تبقى رهينة حلّ الأزمة الأساسية المتعلقة بأرض النادي، ويدعو إلى وضع جدول زمني مدروس لتطبيق خطط التطوير فور استقرار هذا الملف.
-              </p>
-            </div>
-          </div>
-        </section>
-
         {/* Building List Section */}
         <section className="py-20 px-4 bg-gradient-to-b from-black to-gray-900">
           <div className="container mx-auto max-w-7xl">
@@ -254,6 +226,34 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Section */}
+        <section className="py-20 px-4 bg-black">
+          <div className="container mx-auto max-w-4xl text-center">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+              <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
+                لماذا ناجح البارودي
+              </span>
+            </h2>
+            <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-12 leading-tight">
+              لرئاسة نادي اسيوط الرياضي
+            </h3>
+            
+            <div className="text-right space-y-6 text-white text-lg md:text-xl leading-relaxed">
+              <p className="text-gray-200">
+                في ظل المرحلة الحرجة التي يمر بها نادي أسيوط الرياضي، يؤمن ناجح البارودي بأن الحفاظ على تاريخ هذا النادي العريق مسؤولية جماعية تستند إلى الإخلاص والمثابرة والإصرار. ومن هذا المنطلق، قرر الترشح لرئاسة مجلس إدارة النادي، واضعًا نصب عينيه هدفًا واضحًا: إعادة نادي أسيوط إلى مكانته المرموقة ومجده الرياضي والثقافي.
+              </p>
+              
+              <p className="text-gray-200">
+                يرى ناجح البارودي أن قضية "أرض النادي" تمثل حجر الأساس لأي مسار إصلاحي أو تطويري، وأن معالجتها تمثل الخطوة الأولى نحو مستقبل أكثر استقرارًا واستدامة. لذلك جعل من إنهاء مشكلة سحب أرض النادي وسداد المتأخرات المالية أولوية قصوى ضمن برنامجه الانتخابي.
+              </p>
+              
+              <p className="text-gray-200">
+                يؤمن ناجح بأن النجاح لا يتحقق إلا بالعمل المنظم والرؤية الواضحة، وقد اطّلع بعناية على جميع البرامج والمقترحات الانتخابية للمرشحين الآخرين، مقدّرًا ما تحمله من أفكار طموحة تستشرف مستقبلًا واعدًا للنادي خلال السنوات القادمة. ومع ذلك، فهو يرى أن جميع تلك المبادرات تبقى رهينة حلّ الأزمة الأساسية المتعلقة بأرض النادي، ويدعو إلى وضع جدول زمني مدروس لتطبيق خطط التطوير فور استقرار هذا الملف.
+              </p>
             </div>
           </div>
         </section>
