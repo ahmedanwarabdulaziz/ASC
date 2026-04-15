@@ -17,13 +17,16 @@ export default async function MembershipHubPage({ params }: { params: Promise<{ 
       id,
       relationship,
       card_status,
-      added_at,
       person:people (
         first_name,
         last_name,
         national_id,
         birth_date,
         gender
+      ),
+      registry:membership_number_registry (
+        membership_number,
+        is_current
       )
     `)
     .eq('membership_id', id)
@@ -80,14 +83,23 @@ export default async function MembershipHubPage({ params }: { params: Promise<{ 
             </tr>
           </thead>
           <tbody>
-            {(family || []).map((member: any) => {
+            {(family || []).map((member: Record<string, unknown>) => {
               const person = Array.isArray(member.person) ? member.person[0] : member.person;
+              const registryList = Array.isArray(member.registry) ? member.registry : [member.registry];
+              const registry = registryList.find((r: Record<string, unknown>) => r?.is_current) || registryList[0];
               return (
                 <tr key={member.id}>
                   <td style={{ fontWeight: member.relationship === 'principal' ? 'bold' : 'normal', color: member.relationship === 'principal' ? 'var(--primary)' : 'inherit' }}>
                     {relLabels[member.relationship] || member.relationship}
                   </td>
-                  <td style={{ fontWeight: 600 }}>{person?.first_name} {person?.last_name}</td>
+                  <td style={{ fontWeight: 600 }}>
+                    {person?.first_name} {person?.last_name}
+                    {registry && registry.membership_number && (
+                      <div dir="ltr" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                         ID: {registry.membership_number}
+                      </div>
+                    )}
+                  </td>
                   <td dir="ltr" style={{ textAlign: 'right' }}>{person?.national_id}</td>
                   <td dir="ltr" style={{ textAlign: 'right' }}>{formatDate(person?.birth_date) || 'غير محدد'}</td>
                   <td>

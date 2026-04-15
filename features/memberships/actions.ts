@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { parseEgyptianNationalId } from '@/lib/utils/egyptian-id'
 
-export async function enrollNewMembership(prevState: any, formData: FormData) {
+export async function enrollNewMembership(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
 
   // Capture Payload for Form Retention
@@ -38,71 +38,35 @@ export async function enrollNewMembership(prevState: any, formData: FormData) {
     return { error: `الرقم القومي غير صحيح: ${parsedId.error}`, success: false, data: payload }
   }
 
-  let person_id = ''
-  
-  // Strict lock checks
-  const { data: existingPerson } = await supabase.from('people').select('id').eq('national_id', national_id).single()
-  
-  if (existingPerson) {
-    person_id = existingPerson.id
-    
-    // Prevent double principal enrollments
-    const { data: existingPrincipal } = await supabase.from('memberships').select('id').eq('main_person_id', person_id).single()
-    if (existingPrincipal) {
-       return { error: 'تحذير: هذا الشخص مسجل بالفعل كعضو رئيسي في اشتراك آخر!', success: false, data: payload }
-    }
-  } else {
-    // Generate new person safely mapping parsed DOB & Gender automatically
-    const { data: newPerson, error: personError } = await supabase.from('people').insert({
+  // Ensure we push the parsed birth date back into the payload for the RPC
+  const finalPayload = {
+      membership_number,
+      type: membership_type,
       national_id,
-      first_name: `${first_name} ${second_name} ${third_name}`.trim(),
+      first_name,
       last_name,
+      phone,
       gender: parsedId.valid ? parsedId.gender : gender,
-      phone_number: phone,
       birth_date: parsedId.birthDate
-    }).select('id').single()
+  };
 
-    if (personError) {
-      if (personError.code === '23505') return { error: 'الرقم القومي مسجل لأحد الأفراد بالسيستم', success: false, data: payload }
-      return { error: `فشل في إنشاء السجل المدني: ${personError.message}`, success: false, data: payload }
-    }
-    person_id = newPerson.id
+  const { data: result, error: rpcError } = await supabase.rpc('enroll_membership_transaction', {
+    payload: finalPayload
+  });
+
+  if (rpcError) {
+    return { error: `فشل النظام: ${rpcError.message}`, success: false, data: payload }
   }
 
-  // Create Membership Envelope
-  const { data: newMembership, error: membershipError } = await supabase.from('memberships').insert({
-    membership_number,
-    main_person_id: person_id,
-    type: membership_type as any,
-    status: 'active'
-  }).select('id').single()
-
-  if (membershipError) {
-    // Ultimate Database duplicate protection
-    if (membershipError.code === '23505') {
-       return { error: 'رقم العضوية مكرر! يرجى إدخال رقم عضوية مختلف.', success: false, data: payload }
-    }
-    return { error: `فشل إنشاء ملف الاشتراك: ${membershipError.message}`, success: false, data: payload }
-  }
-
-  // Solidify the Link
-  const { error: linkError } = await supabase.from('membership_members').insert({
-    membership_id: newMembership.id,
-    person_id: person_id,
-    relationship: 'principal',
-    card_status: 'active'
-  })
-
-  if (linkError) {
-     return { error: `حدث خطأ أثناء ربط العضوية: ${linkError.message}`, success: false, data: payload }
+  if (!result.success) {
+    return { error: result.error, success: false, data: payload }
   }
 
   revalidatePath('/system/memberships', 'layout')
-  // We will redirect to the Family management screen next
-  redirect(`/system/memberships/${newMembership.id}`)
+  redirect(`/system/memberships/${result.membership_id}`)
 }
 
-export async function addDependentToMembership(prevState: any, formData: FormData) {
+export async function addDependentToMembership(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
 
   const payload = {
@@ -131,45 +95,27 @@ export async function addDependentToMembership(prevState: any, formData: FormDat
     return { error: `الرقم القومي غير صحيح: ${parsedId.error}`, success: false, data: payload }
   }
 
-  let person_id = ''
-  
-  // Strict lock checks
-  const { data: existingPerson } = await supabase.from('people').select('id').eq('national_id', national_id).single()
-  
-  if (existingPerson) {
-    person_id = existingPerson.id
-    const { data: existingLink } = await supabase.from('membership_members').select('id').eq('person_id', person_id).single()
-    if (existingLink) {
-       return { error: 'تحذير: هذا الشخص مسجل بالفعل داخل اشتراك في النظام!', success: false, data: payload }
-    }
-  } else {
-    // Generate new child/wife safely
-    const { data: newPerson, error: personError } = await supabase.from('people').insert({
+  const finalPayload = {
+      membership_id,
       national_id,
-      first_name: `${first_name} ${second_name} ${third_name}`.trim(),
+      first_name,
       last_name,
+      relationship,
+      phone,
       gender: parsedId.gender,
-      phone_number: phone,
       birth_date: parsedId.birthDate
-    }).select('id').single()
+  };
 
-    if (personError) {
-      if (personError.code === '23505') return { error: 'الرقم القومي مسجل لأحد الأفراد بالسيستم', success: false, data: payload }
-      return { error: `فشل في إنشاء السجل: ${personError.message}`, success: false, data: payload }
-    }
-    person_id = newPerson.id
+  const { data: result, error: rpcError } = await supabase.rpc('add_dependent_transaction', {
+    payload: finalPayload
+  });
+
+  if (rpcError) {
+    return { error: `فشل النظام: ${rpcError.message}`, success: false, data: payload }
   }
 
-  // Solidify the Link
-  const { error: linkError } = await supabase.from('membership_members').insert({
-    membership_id: membership_id,
-    person_id: person_id,
-    relationship: relationship as any,
-    card_status: 'active'
-  })
-
-  if (linkError) {
-     return { error: `حدث خطأ أثناء الربط: ${linkError.message}`, success: false, data: payload }
+  if (!result.success) {
+    return { error: result.error, success: false, data: payload }
   }
 
   revalidatePath(`/system/memberships/${membership_id}`, 'page')

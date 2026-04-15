@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { removeDependentAction } from '@/features/memberships/mutations'
+import { requestSeparationAction } from '@/features/memberships/mutations'
 
 export default function DeleteDependentBtn({ linkId, membershipId, isPrincipal }: { linkId: string, membershipId: string, isPrincipal: boolean }) {
   const [isPending, startTransition] = useTransition()
@@ -12,9 +12,9 @@ export default function DeleteDependentBtn({ linkId, membershipId, isPrincipal }
         return;
     }
     
-    if (confirm('هل تود فصل وإلغاء هذا التابع من العضوية؟ سيظل السجل محتفظاً بتارخ التابع ولن يتم حذفه نهائياً.')) {
+    if (confirm('هل تود تقديم طلب رسمي بفصل هذا التابع لاستخراج عضوية مستقلة له؟ سيتم تحويل الطلب للإدارة للمراجعة.')) {
       startTransition(async () => {
-        const result = await removeDependentAction(linkId, membershipId);
+        const result = await requestSeparationAction(linkId, membershipId);
         if (result.error) {
            alert(result.error);
         }

@@ -18,7 +18,7 @@ export async function getRoleDefinitions() {
   return data
 }
 
-export async function createRoleDefinition(prevState: any, formData: FormData) {
+export async function createRoleDefinition(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
   
   const name_ar = formData.get('name_ar') as string
@@ -69,7 +69,7 @@ export async function getRoleFields(role_id: string) {
   return data || []
 }
 
-export async function createRoleField(prevState: any, formData: FormData) {
+export async function createRoleField(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
   
   const role_id = formData.get('role_id') as string

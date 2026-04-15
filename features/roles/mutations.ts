@@ -20,7 +20,7 @@ export async function deleteRoleDefinition(id: string) {
   return { success: true }
 }
 
-export async function updateRoleDefinition(prevState: any, formData: FormData) {
+export async function updateRoleDefinition(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
   
   const id = formData.get('id') as string

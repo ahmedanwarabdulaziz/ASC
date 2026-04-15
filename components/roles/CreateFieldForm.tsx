@@ -32,7 +32,7 @@ export default function CreateFieldForm({ roleId }: { roleId: string }) {
           </div>
         )}
 
-        <form action={formAction} ref={formRef} className="auth-form" key={state.success ? Date.now() : 'form'}>
+        <form action={formAction} ref={formRef} className="auth-form">
           <input type="hidden" name="role_id" value={roleId} />
 
           <div className="form-group">

@@ -15,7 +15,7 @@ export async function getSystemSettings() {
   return config
 }
 
-export async function updateSystemSettings(prevState: any, formData: FormData) {
+export async function updateSystemSettings(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
   
   const minor_max_age = parseInt(formData.get('minor_max_age') as string)

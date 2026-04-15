@@ -92,13 +92,14 @@ BEGIN
     JOIN public.person_roles pr ON pr.role_id = srp.role_id
     JOIN public.system_users su ON su.person_id = pr.person_id
     WHERE su.id = v_user_id
+      AND su.is_active = true
       AND pr.status = 'active'
       AND srp.permission_code = required_permission
   ) INTO v_has;
 
   RETURN v_has;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 -- 6. STRICT TABLE RLS WRAPPERS
 ALTER TABLE public.system_permissions ENABLE ROW LEVEL SECURITY;
