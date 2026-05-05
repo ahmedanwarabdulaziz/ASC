@@ -33,7 +33,7 @@ export default async function TrainingGroupsPage() {
       </div>
 
       <Suspense fallback={<div style={{padding: '2rem', textAlign: 'center'}}>جاري التحميل...</div>}>
-        <TrainingGroupsClient initialData={result.data} />
+        <TrainingGroupsClient initialData={result.data as any} />
       </Suspense>
     </div>
   );

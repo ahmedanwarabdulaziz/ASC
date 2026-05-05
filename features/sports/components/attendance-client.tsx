@@ -35,7 +35,7 @@ export function AttendanceClient({ initialData, currentDate }: AttendanceClientP
         setIsSubmitting(true);
         const res = await getOccurrenceDetails(selectedOccurrence.id);
         if (res.success) {
-          setSelectedOccurrence({ ...res.data, detailsLoaded: true });
+          setSelectedOccurrence({ ...(res.data as any), detailsLoaded: true });
         } else {
           setError(res.error || 'خطأ في تحميل تفاصيل الجلسة');
         }
