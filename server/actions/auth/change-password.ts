@@ -1,7 +1,7 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
 const changePasswordSchema = z.object({
@@ -27,39 +27,16 @@ export async function changePassword(formData: FormData) {
     const { currentPassword, newPassword } = parsed.data;
 
     // 1. Get current user
-    const supabase = await createServerClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user || !user.email) {
       return { success: false, error: 'يجب تسجيل الدخول أولاً.' };
     }
 
-    // 2. Verify current password by attempting sign-in
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    // Use a fresh anon client to verify the old password without affecting the session
-    const { createClient: createBrowserClient } = await import('@supabase/supabase-js');
-    const verifyClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    const { error: verifyError } = await verifyClient.auth.signInWithPassword({
+    // 2. Verify current password via admin client
+    const supabaseAdmin = createAdminClient();
+    const { error: verifyError } = await supabaseAdmin.auth.signInWithPassword({
       email: user.email,
       password: currentPassword,
     });
@@ -68,11 +45,10 @@ export async function changePassword(formData: FormData) {
       return { success: false, error: 'كلمة المرور الحالية غير صحيحة.' };
     }
 
-    // 3. Update password via Admin API
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    // 3. Update password + clear must_change_password flag via session-aware client
+    const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
-      user_metadata: {
-        ...user.user_metadata,
+      data: {
         must_change_password: false,
       },
     });
@@ -102,7 +78,7 @@ export async function setInitialPassword(formData: FormData) {
     }
 
     // 1. Get current user
-    const supabase = await createServerClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -114,22 +90,11 @@ export async function setInitialPassword(formData: FormData) {
       return { success: false, error: 'لا يتطلب تغيير كلمة المرور.' };
     }
 
-    // 3. Update password and remove the flag
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+    // 3. Update password + remove flag via session-aware client
+    //    This updates the session so the proxy won't redirect back
+    const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
-      user_metadata: {
-        ...user.user_metadata,
+      data: {
         must_change_password: false,
       },
     });
