@@ -294,7 +294,7 @@ export function EditStaffForm({ staffMember, jobs, groups }: EditStaffFormProps)
           personId={person.id}
           staffMemberId={staffMember.id}
           personName={`${person.first_name} ${person.last_name}`}
-          personEmail={person.email || ''}
+          personNationalId={person.national_id || ''}
           hasSystemUser={hasSystemUser}
           systemUserActive={systemUserActive}
           isLinkedToStaff={isLinkedToStaff}

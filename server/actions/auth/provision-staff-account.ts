@@ -9,7 +9,6 @@ import { z } from 'zod';
 const provisionSchema = z.object({
   personId: z.string().uuid(),
   staffMemberId: z.string().uuid(),
-  email: z.string().email('يجب إدخال بريد إلكتروني صحيح'),
   roleId: z.string().uuid().optional(),
 });
 
@@ -31,7 +30,6 @@ export async function provisionStaffAccount(formData: FormData) {
     const parsed = provisionSchema.safeParse({
       personId: formData.get('personId'),
       staffMemberId: formData.get('staffMemberId'),
-      email: formData.get('email'),
       roleId: formData.get('roleId') || undefined,
     });
 
@@ -39,9 +37,24 @@ export async function provisionStaffAccount(formData: FormData) {
       return { success: false, error: parsed.error.errors[0].message };
     }
 
-    const { personId, staffMemberId, email, roleId } = parsed.data;
+    const { personId, staffMemberId, roleId } = parsed.data;
 
-    // 3. Initialize Service Role Client (Bypasses RLS for Auth Admin API)
+    // 3. Fetch person's national ID
+    const supabase = await createServerClient();
+    const { data: person, error: personError } = await supabase
+      .from('people')
+      .select('national_id')
+      .eq('id', personId)
+      .single();
+
+    if (personError || !person?.national_id) {
+      return { success: false, error: 'لم يتم العثور على الرقم القومي للشخص. تأكد من تسجيل الرقم القومي أولاً.' };
+    }
+
+    const nationalId = person.national_id;
+    const email = `${nationalId}@assiutsc.com`;
+
+    // 4. Initialize Service Role Client (Bypasses RLS for Auth Admin API)
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -53,29 +66,31 @@ export async function provisionStaffAccount(formData: FormData) {
       }
     );
 
-    // 4. Generate temporary password
+    // 5. Generate temporary password
     const tempPassword = generateSecurePassword();
 
-    // 5. Create Auth User in GoTrue
+    // 6. Create Auth User in GoTrue
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: {
-        person_id: personId
+        person_id: personId,
+        must_change_password: true,
       }
     });
 
     if (authError) {
       console.error('[provisionStaffAccount] Supabase Auth Error:', authError);
-      return { success: false, error: 'حدث خطأ أثناء إنشاء حساب الدخول (قد يكون البريد مستخدم بالفعل)' };
+      if (authError.message?.includes('already been registered')) {
+        return { success: false, error: 'هذا الشخص يمتلك حساب دخول بالفعل (الرقم القومي مسجل مسبقاً).' };
+      }
+      return { success: false, error: 'حدث خطأ أثناء إنشاء حساب الدخول.' };
     }
 
     const authUserId = authData.user.id;
 
-    // 6. Use normal authenticated client for RPC to maintain audit log attribution
-    const supabase = await createServerClient();
-    
+    // 7. Use normal authenticated client for RPC to maintain audit log attribution
     const { error: rpcError } = await supabase.rpc('provision_staff_account_transaction', {
       p_auth_user_id: authUserId,
       p_person_id: personId,
@@ -93,8 +108,8 @@ export async function provisionStaffAccount(formData: FormData) {
     return { 
       success: true, 
       data: {
-        email,
-        tempPassword
+        nationalId,
+        tempPassword,
       } 
     };
   } catch (error: any) {

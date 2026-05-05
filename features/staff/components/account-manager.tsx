@@ -11,7 +11,7 @@ interface AccountManagerProps {
   personId: string;
   staffMemberId: string;
   personName: string;
-  personEmail: string;
+  personNationalId: string;
   hasSystemUser: boolean;
   systemUserActive?: boolean;
   isLinkedToStaff: boolean;
@@ -21,7 +21,7 @@ export function AccountManager({
   personId,
   staffMemberId,
   personName,
-  personEmail,
+  personNationalId,
   hasSystemUser,
   systemUserActive,
   isLinkedToStaff,
@@ -31,11 +31,10 @@ export function AccountManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [tempPassword, setTempPassword] = useState('');
-  const [emailToProvision, setEmailToProvision] = useState(personEmail || '');
 
   const handleProvision = async () => {
-    if (!emailToProvision) {
-      setError('يجب إدخال البريد الإلكتروني لإنشاء الحساب');
+    if (!personNationalId) {
+      setError('يجب تسجيل الرقم القومي للشخص أولاً قبل إنشاء حساب الدخول.');
       return;
     }
     
@@ -46,7 +45,6 @@ export function AccountManager({
     const formData = new FormData();
     formData.append('personId', personId);
     formData.append('staffMemberId', staffMemberId);
-    formData.append('email', emailToProvision);
 
     try {
       const result = await provisionStaffAccount(formData);
@@ -110,18 +108,40 @@ export function AccountManager({
 
   return (
     <section className={styles.sectionCard} style={{ marginTop: '2rem' }}>
-      <div className={styles.sectionTitle}>إدارة حساب الدخول (Auth Provisioning)</div>
+      <div className={styles.sectionTitle}>إدارة حساب الدخول</div>
       
       {error && <div className={styles.error} style={{ marginBottom: '1rem' }}>{error}</div>}
 
       {tempPassword && (
         <div className={`${styles.stateCard} ${styles.stateCardSuccess}`} style={{ marginBottom: '1.5rem' }}>
           <h4 className={styles.successText}>تم إنشاء الحساب بنجاح</h4>
-          <p>يرجى نسخ كلمة المرور وإعطائها للموظف. <strong>لن يتم عرض كلمة المرور مرة أخرى!</strong></p>
-          <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1.25rem', fontFamily: 'monospace', textAlign: 'center', direction: 'ltr' }}>
-            {tempPassword}
+          <p>يرجى نسخ بيانات الدخول وإعطائها للموظف. <strong>لن يتم عرض كلمة المرور مرة أخرى!</strong></p>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>
+            سيُطلب من الموظف تغيير كلمة المرور عند أول تسجيل دخول.
+          </p>
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            background: '#fff', 
+            border: '1px solid #e2e8f0', 
+            borderRadius: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#64748b' }}>الرقم القومي (اسم المستخدم):</span>
+              <div style={{ fontSize: '1.1rem', fontFamily: 'monospace', direction: 'ltr', fontWeight: 600 }}>
+                {personNationalId}
+              </div>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#64748b' }}>كلمة المرور المؤقتة:</span>
+              <div style={{ fontSize: '1.1rem', fontFamily: 'monospace', direction: 'ltr', fontWeight: 600 }}>
+                {tempPassword}
+              </div>
+            </div>
           </div>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>البريد الإلكتروني للدخول: <span dir="ltr">{emailToProvision}</span></p>
         </div>
       )}
 
@@ -144,7 +164,7 @@ export function AccountManager({
               <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '0.25rem' }}>
                 {isLinkedToStaff 
                   ? 'تم ربط الحساب بنجاح بملف الموظف.'
-                  : 'الشخص يمتلك حساب دخول مسبقاً (ربما كعضو مجلس إدارة أو دور آخر)، يمكنك ربط هذا الحساب بملف الموظف.'}
+                  : 'الشخص يمتلك حساب دخول مسبقاً، يمكنك ربط هذا الحساب بملف الموظف.'}
               </p>
             </div>
             
@@ -176,30 +196,28 @@ export function AccountManager({
         </div>
       ) : (
         <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
-          <p style={{ color: '#64748b', marginBottom: '1rem' }}>
-            لا يوجد حساب دخول مسجل لهذا الشخص. يمكنك إنشاء حساب جديد بصلاحيات الدخول لكي يتمكن من استخدام النظام.
+          <p style={{ color: '#64748b', marginBottom: '0.5rem' }}>
+            لا يوجد حساب دخول مسجل لهذا الشخص. يمكنك إنشاء حساب جديد ليتمكن من استخدام النظام.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div className={styles.formGroup} style={{ flex: 1, minWidth: '200px', marginBottom: 0 }}>
-              <label className={styles.label}>البريد الإلكتروني للدخول</label>
-              <input 
-                type="email" 
-                className={styles.input} 
-                dir="ltr"
-                value={emailToProvision} 
-                onChange={e => setEmailToProvision(e.target.value)} 
+          {personNationalId ? (
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <p style={{ fontSize: '0.9rem', color: '#0f172a' }}>
+                سيتم إنشاء الحساب بالرقم القومي: <strong dir="ltr" style={{ fontFamily: 'monospace' }}>{personNationalId}</strong>
+              </p>
+              <button 
+                type="button" 
+                className={styles.buttonPrimary} 
+                onClick={handleProvision}
                 disabled={isSubmitting}
-              />
+              >
+                {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء حساب جديد'}
+              </button>
             </div>
-            <button 
-              type="button" 
-              className={styles.buttonPrimary} 
-              onClick={handleProvision}
-              disabled={isSubmitting || !emailToProvision}
-            >
-              {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء حساب جديد'}
-            </button>
-          </div>
+          ) : (
+            <p style={{ color: '#ef4444', fontSize: '0.9rem', fontWeight: 600 }}>
+              يجب تسجيل الرقم القومي للشخص أولاً قبل إنشاء حساب الدخول.
+            </p>
+          )}
         </div>
       )}
     </section>

@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Proxy handles:
  * 1. Supabase session refresh on every request
  * 2. Route protection — unauthenticated users can't access /system/*
+ * 3. First-login password change enforcement
  *
  * Note: Next.js 16 renamed middleware.ts → proxy.ts and middleware() → proxy()
  */
@@ -49,8 +50,27 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Force password change on first login
+  // If user has must_change_password flag and is NOT already on the change-password page
+  if (
+    user &&
+    user.user_metadata?.must_change_password === true &&
+    !request.nextUrl.pathname.startsWith('/auth/change-password') &&
+    request.nextUrl.pathname.startsWith('/system')
+  ) {
+    const changePasswordUrl = request.nextUrl.clone();
+    changePasswordUrl.pathname = '/auth/change-password';
+    return NextResponse.redirect(changePasswordUrl);
+  }
+
   // If user is logged in and visits login page, redirect to system
   if (request.nextUrl.pathname.startsWith('/auth/login') && user) {
+    // But if they need to change password, send them there instead
+    if (user.user_metadata?.must_change_password === true) {
+      const changePasswordUrl = request.nextUrl.clone();
+      changePasswordUrl.pathname = '/auth/change-password';
+      return NextResponse.redirect(changePasswordUrl);
+    }
     const systemUrl = request.nextUrl.clone();
     systemUrl.pathname = '/system';
     return NextResponse.redirect(systemUrl);

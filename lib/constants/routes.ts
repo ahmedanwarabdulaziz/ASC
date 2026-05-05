@@ -10,11 +10,13 @@ export const ROUTES = {
   /** Authentication */
   auth: {
     login: '/auth/login',
+    changePassword: '/auth/change-password',
   },
 
   /** Internal system (protected) */
   system: {
     root: '/system',
+    changePassword: '/system/change-password',
     people: '/system/people',
     memberships: '/system/memberships',
     staff: '/system/staff',
