@@ -1,0 +1,99 @@
+.articlePage {
+  min-height: 100vh;
+  background-color: white;
+  padding-bottom: 5rem;
+}
+
+.coverImageContainer {
+  width: 100%;
+  height: 400px;
+  background-color: #0f172a;
+  position: relative;
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.articleContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  margin-top: -100px;
+  position: relative;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  padding: 4rem 3rem;
+}
+
+.header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #c7a34b;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.separator {
+  color: #cbd5e1;
+}
+
+.author {
+  color: #64748b;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.content {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: #334155;
+}
+
+.content p {
+  margin-bottom: 1.5rem;
+}
+
+.content h2 {
+  font-size: 1.8rem;
+  color: #0f172a;
+  margin: 2.5rem 0 1rem;
+}
+
+.content h3 {
+  font-size: 1.4rem;
+  color: #1e293b;
+  margin: 2rem 0 1rem;
+}
+
+@media (max-width: 768px) {
+  .coverImageContainer {
+    height: 300px;
+  }
+  .articleContainer {
+    margin-top: -50px;
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+  }
+  .title {
+    font-size: 1.8rem;
+  }
+}

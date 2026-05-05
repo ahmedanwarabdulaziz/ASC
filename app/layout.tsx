@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
+import { APP_CONFIG } from '@/config/app';
 import './globals.css';
-import GlobalBehavior from "@/components/GlobalBehavior";
 
 export const metadata: Metadata = {
-  title: 'Assiut SC | نادي أسيوط الرياضي',
-  description: 'المنصة الرقمية المتكاملة لخدمة أعضاء النادي وإدارة العمليات',
+  title: APP_CONFIG.clubNameAr,
+  description: APP_CONFIG.descriptionAr,
 };
 
 export default function RootLayout({
@@ -13,11 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body>
-        <GlobalBehavior />
-        {children}
-      </body>
+    <html lang={APP_CONFIG.locale} dir={APP_CONFIG.dir}>
+      <body>{children}</body>
     </html>
   );
 }

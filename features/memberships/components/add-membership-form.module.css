@@ -1,0 +1,247 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(15, 42, 28, 0.08);
+  color: #395d46;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.title {
+  color: #0f172a;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.description {
+  color: #64748b;
+  line-height: 1.8;
+  max-width: 48rem;
+}
+
+.sectionCard {
+  padding: 1.25rem;
+  border-radius: 22px;
+  border: 1px solid #e2e8f0;
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.sectionTitle {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0.9rem;
+}
+
+.helperText {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.label {
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #0f172a;
+  font-size: 0.96rem;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.input:focus {
+  border-color: rgba(183, 141, 50, 0.7);
+  box-shadow: 0 0 0 4px rgba(183, 141, 50, 0.12);
+}
+
+.input:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.searchBox {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+}
+
+.buttonSearch,
+.buttonPrimary,
+.buttonSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 16px;
+  font-weight: 800;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.buttonSearch {
+  border: 1px solid rgba(15, 42, 28, 0.12);
+  background: #0f2a1c;
+  color: #f8fbf7;
+  cursor: pointer;
+}
+
+.buttonSearch:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #153824;
+}
+
+.buttonSearch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.buttonPrimary {
+  border: none;
+  background: linear-gradient(135deg, #c7a34b, #b78d32);
+  color: #0f172a;
+  box-shadow: 0 14px 24px rgba(183, 141, 50, 0.22);
+  cursor: pointer;
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 28px rgba(183, 141, 50, 0.26);
+}
+
+.buttonPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.buttonSecondary {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: white;
+  color: #334155;
+  text-decoration: none;
+}
+
+.buttonSecondary:hover {
+  transform: translateY(-1px);
+  border-color: rgba(71, 85, 105, 0.24);
+  background: #f8fafc;
+}
+
+.stateCard {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid #cbd5e1;
+  background: white;
+}
+
+.stateCardSuccess {
+  background: #ecfdf3;
+  border-color: #86efac;
+}
+
+.stateCardWarning {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.personName {
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.personDetails {
+  margin-top: 0.3rem;
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.warningText {
+  color: #92400e;
+}
+
+.successText {
+  color: #166534;
+}
+
+.splitGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .searchBox,
+  .splitGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .buttonSearch,
+  .buttonPrimary,
+  .buttonSecondary {
+    width: 100%;
+  }
+}

@@ -1,100 +1,88 @@
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import { formatDate } from '@/lib/utils/formatters'
+import Link from 'next/link';
+import { requirePermission } from '@/server/permissions/require-permission';
+import { PERMISSIONS } from '@/types/permissions';
+import { getPeople } from '@/server/actions/people/get-people';
+import { PeopleTable } from '@/features/people/components/people-table';
+import { SearchInput } from '@/features/people/components/search-input';
+import { PaginationControls } from '@/features/people/components/pagination-controls';
+import { appendReturnTo } from '@/lib/utils/return-to';
+import workspace from '@/features/system/components/workspace.module.css';
 
-export default async function PeopleDashboard() {
-  const supabase = await createClient()
+export const dynamic = 'force-dynamic';
 
-  const { data: people } = await supabase
-    .from('people')
-    .select(`
-      *,
-      person_roles(role_definitions(name_ar)),
-      membership_members(relationship, memberships(type, membership_number))
-    `)
-    .order('created_at', { ascending: false })
+export const metadata = {
+  title: 'الأشخاص | People',
+};
+
+export default async function PeoplePage(props: {
+  searchParams: Promise<{ search?: string; page?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  await requirePermission(PERMISSIONS.PEOPLE_READ);
+
+  const search = searchParams.search || '';
+  const page = parseInt(searchParams.page || '1', 10);
+  const limit = 20;
+  const params = new URLSearchParams();
+
+  if (search) {
+    params.set('search', search);
+  }
+
+  if (page > 1) {
+    params.set('page', String(page));
+  }
+
+  const currentPath = params.toString() ? `/system/people?${params.toString()}` : '/system/people';
+  const { data: people, total } = await getPeople({ search, page, limit });
 
   return (
-    <div className="page-container">
-      <div className="page-header flex-between" style={{ marginBottom: '2rem' }}>
-        <div>
-          <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>السجل العام للأفراد</h1>
-          <span style={{ color: 'var(--text-muted)' }}>Global People Directory</span>
+    <div className={workspace.page}>
+      <section className={workspace.hero}>
+        <div className={workspace.heroRow}>
+          <div>
+            <span className={workspace.eyebrow}>People Registry</span>
+            <h1 className={workspace.title}>سجل الأشخاص</h1>
+            <p className={workspace.description}>
+              مساحة عمل واضحة لإدارة الأشخاص المسجلين وربطهم لاحقاً بالعضويات والملفات التابعة بدون فقدان السياق.
+            </p>
+          </div>
+
+          <div className={workspace.heroAside}>
+            <div className={workspace.heroStat}>
+              <span className={workspace.heroStatValue}>{total}</span>
+              <span className={workspace.heroStatLabel}>إجمالي السجلات</span>
+            </div>
+            <div className={workspace.heroStat}>
+              <span className={workspace.heroStatValue}>{page}</span>
+              <span className={workspace.heroStatLabel}>الصفحة الحالية</span>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>الاسم الكامل</th>
-              <th>الرقم القومي</th>
-              <th>صفة الدخول (System Role)</th>
-              <th>تاريخ الميلاد</th>
-              <th>النوع</th>
-              <th>رقم الهاتف</th>
-              <th>تاريخ التسجيل</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(people || []).map((person: any) => (
-              <tr key={person.id}>
-                <td style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{person.first_name} {person.last_name}</td>
-                <td dir="ltr" style={{ textAlign: 'right' }}>{person.national_id}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                    {/* Render System Roles first */}
-                    {person.person_roles && person.person_roles.map((pr: any, idx: number) => (
-                      <span key={`pr-${idx}`} className="badge" style={{ background: '#fef3c7', color: '#d97706' }}>
-                        {pr.role_definitions?.name_ar}
-                      </span>
-                    ))}
-                    
-                    {/* Render Membership Status */}
-                    {person.membership_members && person.membership_members.map((link: any, idx: number) => {
-                       const isPrincipal = link.relationship === 'principal';
-                       return (
-                         <span key={`mm-${idx}`} className="badge" style={{ background: isPrincipal ? '#dcfce7' : '#f3e8ff', color: isPrincipal ? '#166534' : '#6b21a8' }} title={`عضوية رقم: ${link.memberships?.membership_number || ''}`}>
-                           {isPrincipal ? 'عضو رئيسي' : 'فرد تابع'}
-                         </span>
-                       )
-                    })}
+      <section className={workspace.toolbar}>
+        <div className={workspace.searchSlot}>
+          <SearchInput />
+        </div>
 
-                    {(!person.person_roles?.length && !person.membership_members?.length) && (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>غير نشط / بدون اشتراك</span>
-                    )}
-                  </div>
-                </td>
-                <td dir="ltr" style={{ textAlign: 'right' }}>{formatDate(person.birth_date) || 'غير مسجل'}</td>
-                <td>
-                  {person.gender === 'male' ? (
-                     <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1' }}>ذكر</span>
-                  ) : person.gender === 'female' ? (
-                     <span className="badge" style={{ background: '#fce7f3', color: '#be185d' }}>أنثى</span>
-                  ) : person.gender}
-                </td>
-                <td dir="ltr" style={{ textAlign: 'right' }}>{person.phone_number || 'غير مسجل'}</td>
-                <td dir="ltr" style={{ textAlign: 'right' }}>
-                  {formatDate(person.created_at)}
-                </td>
-                <td>
-                  <Link href={`/system/people/${person.id}`} className="btn btn-sm" style={{ background: '#f1f5f9' }}>
-                    عرض الملف الشامل
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {people?.length === 0 && (
-              <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                  لا توجد أي سجلات أشخاص في قاعدة البيانات
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+        <div className={workspace.toolbarActions}>
+          <Link
+            href={appendReturnTo('/system/people/new', currentPath)}
+            prefetch={true}
+            className={workspace.primaryAction}
+          >
+            <span>إضافة شخص</span>
+            <span aria-hidden="true">+</span>
+          </Link>
+        </div>
+      </section>
+
+      <section className={`${workspace.surface} ${workspace.tableSurface}`}>
+        <PeopleTable people={people} returnTo={currentPath} />
+      </section>
+
+      <PaginationControls totalRecords={total} currentPage={page} limit={limit} />
     </div>
-  )
+  );
 }

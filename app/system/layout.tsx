@@ -1,32 +1,49 @@
-import Link from 'next/link';
-import { logout } from '@/features/access-control/actions/auth';
+import { redirect } from 'next/navigation';
+import { getUser } from '@/lib/auth/session';
+import { ROUTES } from '@/lib/constants/routes';
+import { APP_CONFIG } from '@/config/app';
+import styles from './layout.module.css';
+import { LogoutButton } from './logout-button';
+import { SystemNav } from './system-nav';
 
-export default function SystemLayout({
+export default async function SystemLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const user = await getUser();
+
+  if (!user) {
+    redirect(ROUTES.auth.login);
+  }
+
   return (
-    <div className="system-layout">
-      <aside className="system-sidebar">
-        <div className="sidebar-header">
-          <h2>نادي أسيوط</h2>
-          <span>Assiut SC</span>
+    <div className={styles.shell}>
+      {/* Sidebar Navigation */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarHeader}>
+          <div className={styles.headerBadge}>
+            <svg viewBox="0 0 28 28" fill="none" className={styles.headerBadgeIcon} aria-hidden="true">
+              <path
+                d="M14 3 L16 10 L23 10 L17.5 14.5 L19.5 22 L14 17.5 L8.5 22 L10.5 14.5 L5 10 L12 10 Z"
+                fill="currentColor"
+                opacity="0.9"
+              />
+            </svg>
+          </div>
+          <span className={styles.headerTitle}>{APP_CONFIG.clubNameAr}</span>
         </div>
-        <nav className="sidebar-nav">
-          <Link href="/system" className="nav-item">لوحة القيادة | Dashboard</Link>
-          <Link href="/system/people" className="nav-item">الأشخاص | People</Link>
-          <Link href="/system/roles" className="nav-item">إعدادات الأدوار | Roles</Link>
-          <Link href="/system/settings" className="nav-item">الإعدادات العامة | Settings</Link>
-          <Link href="/system/memberships" className="nav-item">العضويات | Memberships</Link>
-          <form action={logout} style={{ marginTop: 'auto' }}>
-            <button type="submit" className="nav-item logout w-full text-right" style={{ background: 'none', border: 'none', width: '100%', textAlign: 'right', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1rem', display: 'flex' }}>
-              خروج | Logout
-            </button>
-          </form>
-        </nav>
+
+        <SystemNav />
+
+        <div className={styles.sidebarFooter}>
+          <span className={styles.userEmail}>{user.email}</span>
+          <LogoutButton />
+        </div>
       </aside>
-      <main className="system-content">
+
+      {/* Main Content */}
+      <main className={styles.main}>
         {children}
       </main>
     </div>

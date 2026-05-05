@@ -1,0 +1,276 @@
+.pageStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.summaryCard {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.summaryValue {
+  color: #0f172a;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.summaryLabel {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 220px));
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #1e452b;
+  box-shadow: 0 0 0 1px #1e452b;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1050px;
+}
+
+.table th {
+  text-align: right;
+  padding: 0.85rem 1rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.table td {
+  padding: 1rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.playerName {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.playerMeta {
+  margin-top: 0.3rem;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.badgeStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.statusBadge,
+.attentionBadge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.statusValid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.statusSoon {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusMissing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.statusNeutral {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.attentionYes {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.attentionNo {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.approvalMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.actionButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 0.68rem 0.95rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actionButton {
+  border: none;
+  background: #1e452b;
+  color: #fff;
+}
+
+.secondaryButton {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.panel {
+  border: 1px solid #dbe4ee;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  padding: 1.25rem;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.panelTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.panelDescription {
+  margin-top: 0.35rem;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.fullField {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formActions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.emptyState {
+  padding: 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.error {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+@media (max-width: 980px) {
+  .filters,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

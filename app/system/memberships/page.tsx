@@ -1,113 +1,91 @@
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import DeleteMembershipBtn from '@/components/memberships/DeleteMembershipBtn'
-import { formatDate } from '@/lib/utils/formatters'
+import Link from 'next/link';
+import { requirePermission } from '@/server/permissions/require-permission';
+import { PERMISSIONS } from '@/types/permissions';
+import { getMemberships } from '@/server/actions/memberships/get-memberships';
+import { MembershipsTable } from '@/features/memberships/components/memberships-table';
+import { SearchInput } from '@/features/people/components/search-input';
+import { PaginationControls } from '@/features/people/components/pagination-controls';
+import { appendReturnTo } from '@/lib/utils/return-to';
+import workspace from '@/features/system/components/workspace.module.css';
 
-export default async function MembershipsDashboard() {
-  const supabase = await createClient()
-  
-  const { data: memberships, error } = await supabase
-    .from('memberships')
-    .select(`
-      id,
-      membership_number,
-      type,
-      status,
-      join_date,
-      main_person:people (
-        first_name,
-        last_name,
-        national_id,
-        phone_number
-      )
-    `)
-    .order('created_at', { ascending: false })
+export const dynamic = 'force-dynamic';
 
-  if (error) {
-    console.error("Dashboard error:", error);
+export const metadata = {
+  title: 'العضويات | Memberships',
+};
+
+export default async function MembershipsPage(props: {
+  searchParams: Promise<{ search?: string; page?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  await requirePermission(PERMISSIONS.MEMBERSHIPS_READ);
+
+  const search = searchParams.search || '';
+  const page = parseInt(searchParams.page || '1', 10);
+  const limit = 20;
+  const params = new URLSearchParams();
+
+  if (search) {
+    params.set('search', search);
   }
 
-  const typeLabels: Record<string, string> = {
-    'working': 'عاملة (Working)',
-    'sports': 'رياضية (Sports)',
-    'affiliate': 'تابعة (Affiliate)'
+  if (page > 1) {
+    params.set('page', String(page));
   }
 
-  const statusTags: Record<string, { label: string, bg: string, text: string }> = {
-    'active': { label: 'ساري', bg: '#dcfce7', text: '#166534' },
-    'suspended': { label: 'موقوف', bg: '#fef3c7', text: '#92400e' },
-    'cancelled': { label: 'ملغى', bg: '#fee2e2', text: '#991b1b' }
-  }
+  const currentPath = params.toString()
+    ? `/system/memberships?${params.toString()}`
+    : '/system/memberships';
+  const { data: memberships, total } = await getMemberships({ search, page, limit });
 
   return (
-    <div className="page-container">
-      <div className="page-header flex-between">
-        <h1 className="page-title">ملفات الاشتراكات | Memberships Database</h1>
-        <Link href="/system/memberships/new" className="btn btn-primary">
-          تسجيل عضوية جديدة +
-        </Link>
-      </div>
+    <div className={workspace.page} dir="rtl">
+      <section className={workspace.hero}>
+        <div className={workspace.heroRow}>
+          <div>
+            <span className={workspace.eyebrow}>Memberships Desk</span>
+            <h1 className={workspace.title}>سجل العضويات</h1>
+            <p className={workspace.description}>
+              مساحة عمل موحدة لمتابعة العضويات العاملة والتنقل إلى ملفاتها وتوابعها بسرعة من
+              دون فقدان سياق البحث أو الصفحة الحالية.
+            </p>
+          </div>
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>رقم العضوية</th>
-              <th>النوع</th>
-              <th>اسم العضو الرئيسي (رب الأسرة)</th>
-              <th>الرقم القومي</th>
-              <th>حالة الملف</th>
-              <th>تاريخ القيد</th>
-              <th>إدارة</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(memberships || []).map((ms: any) => {
-              // Ensure we typed the foreign key fetch properly
-              const personData = Array.isArray(ms.main_person) ? ms.main_person[0] : ms.main_person;
-              const sTag = statusTags[ms.status] || { label: ms.status, bg: '#f1f5f9', text: '#475569' };
-              
-              return (
-                <tr key={ms.id}>
-                  <td dir="ltr" style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--primary)' }}>
-                    {ms.membership_number}
-                  </td>
-                  <td>{typeLabels[ms.type] || ms.type}</td>
-                  <td style={{ fontWeight: 600 }}>
-                    {personData ? `${personData.first_name || ''} ${personData.last_name || ''}` : '-'}
-                  </td>
-                  <td dir="ltr" style={{ textAlign: 'right' }}>
-                    {personData?.national_id || '-'}
-                  </td>
-                  <td>
-                    <span className="badge" style={{ background: sTag.bg, color: sTag.text, padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.85rem' }}>
-                      {sTag.label}
-                    </span>
-                  </td>
-                  <td dir="ltr" style={{ textAlign: 'right' }}>{formatDate(ms.join_date)}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <Link href={`/system/memberships/${ms.id}`} className="btn btn-sm btn-primary" style={{ background: 'var(--surface)', color: 'var(--primary)', border: '1px solid var(--border)' }}>
-                        فتح الملف
-                      </Link>
-                      <DeleteMembershipBtn id={ms.id} />
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-            {(!memberships || memberships.length === 0) && (
-              <tr>
-                <td colSpan={7} className="text-center" style={{ padding: '4rem', color: 'var(--text-muted)' }}>
-                  لا توجد أي اشتراكات مسجلة في قاعدة البيانات بصورة نهائية!
-                  <br /><br />
-                  <Link href="/system/memberships/new" className="btn btn-sm btn-primary">بدء تسجيل أول عائلة الآن</Link>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          <div className={workspace.heroAside}>
+            <div className={workspace.heroStat}>
+              <span className={workspace.heroStatValue}>{total}</span>
+              <span className={workspace.heroStatLabel}>إجمالي العضويات</span>
+            </div>
+            <div className={workspace.heroStat}>
+              <span className={workspace.heroStatValue}>{page}</span>
+              <span className={workspace.heroStatLabel}>الصفحة الحالية</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={workspace.toolbar}>
+        <div className={workspace.searchSlot}>
+          <SearchInput />
+        </div>
+
+        <div className={workspace.toolbarActions}>
+          <Link
+            href={appendReturnTo('/system/memberships/new', currentPath)}
+            prefetch={true}
+            className={workspace.primaryAction}
+          >
+            <span>إصدار عضوية عاملة</span>
+            <span aria-hidden="true">+</span>
+          </Link>
+        </div>
+      </section>
+
+      <section className={`${workspace.surface} ${workspace.tableSurface}`}>
+        <MembershipsTable memberships={memberships} returnTo={currentPath} />
+      </section>
+
+      <PaginationControls totalRecords={total} currentPage={page} limit={limit} />
     </div>
-  )
+  );
 }

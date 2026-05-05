@@ -1,16 +1,17 @@
-import EnrollmentWizard from './EnrollmentWizard'
+import { requirePermission } from '@/server/permissions/require-permission';
+import { PERMISSIONS } from '@/types/permissions';
+import { AddMembershipForm } from '@/features/memberships/components/add-membership-form';
 
-export default function NewMembershipPage() {
+export const metadata = {
+  title: 'إصدار عضوية عاملة | New Membership',
+};
+
+export default async function NewMembershipPage() {
+  await requirePermission(PERMISSIONS.MEMBERSHIPS_CREATE);
+
   return (
-    <div className="page-container">
-      <div className="page-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>معالج تسجيل عضوية جديدة</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Membership Enrollment Wizard</p>
-      </div>
-
-      <div className="auth-card" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', borderRadius: '1rem' }}>
-        <EnrollmentWizard />
-      </div>
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+      <AddMembershipForm />
     </div>
-  )
+  );
 }

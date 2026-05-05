@@ -1,130 +1,150 @@
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import DeleteDependentBtn from '@/components/memberships/DeleteDependentBtn'
-import { formatDate } from '@/lib/utils/formatters'
+import Link from 'next/link';
+import { requirePermission } from '@/server/permissions/require-permission';
+import { PERMISSIONS } from '@/types/permissions';
+import { getMembershipDetails } from '@/server/actions/memberships/get-membership-details';
+import { DependentsTable } from '@/features/memberships/components/dependents-table';
+import { appendReturnTo, resolveReturnTo } from '@/lib/utils/return-to';
+import workspace from '@/features/system/components/workspace.module.css';
 
-export default async function MembershipHubPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = await createClient()
+export const dynamic = 'force-dynamic';
 
-  const { data: ms } = await supabase.from('memberships').select('*').eq('id', id).single()
-  if (!ms) return notFound()
+export async function generateMetadata() {
+  return { title: 'تفاصيل العضوية | Membership Details' };
+}
 
-  const { data: family } = await supabase
-    .from('membership_members')
-    .select(`
-      id,
-      relationship,
-      card_status,
-      person:people (
-        first_name,
-        last_name,
-        national_id,
-        birth_date,
-        gender
-      ),
-      registry:membership_number_registry (
-        membership_number,
-        is_current
-      )
-    `)
-    .eq('membership_id', id)
-    .order('added_at', { ascending: true })
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ returnTo?: string }>;
+  isModal?: boolean;
+};
 
-  const relLabels: Record<string, string> = {
-    'principal': 'العضو الرئيسي (رب الأسرة)',
-    'wife': 'زوجة',
-    'husband': 'زوج',
-    'son': 'إبن',
-    'daughter': 'إبنة'
+export default async function MembershipDetailsPage({
+  params,
+  searchParams,
+  isModal = false,
+}: Props) {
+  await requirePermission(PERMISSIONS.MEMBERSHIPS_READ);
+
+  const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const parentReturnTo = resolveReturnTo(
+    resolvedSearchParams?.returnTo,
+    '/system/memberships'
+  );
+  const currentPageHref = appendReturnTo(`/system/memberships/${id}`, parentReturnTo);
+  const { success, data: membership, error } = await getMembershipDetails(id);
+
+  if (!success || !membership) {
+    return (
+      <div style={{ padding: '2rem', color: 'red', direction: 'rtl' }}>
+        <h2>خطأ في تحميل العضوية</h2>
+        <p>{error || 'Membership not found'}</p>
+      </div>
+    );
   }
 
-  const typeLabels: Record<string, string> = {
-    'working': 'عاملة',
-    'sports': 'رياضية',
-    'affiliate': 'تابعة'
-  }
+  const mainPersonName = `${membership.main_person.first_name} ${membership.main_person.second_name} ${membership.main_person.third_name} ${membership.main_person.last_name}`;
 
   return (
-    <div className="page-container">
-      <div className="page-header flex-between" style={{ marginBottom: '2rem' }}>
-        <div>
-          <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>
-            رقم العضوية: <span dir="ltr">{ms.membership_number}</span>
-          </h1>
-          <span style={{ color: 'var(--text-muted)' }}>
-            عضوية {typeLabels[ms.type] || ms.type} | مسجلة في {formatDate(ms.join_date)}
+    <div className={workspace.detailPage} dir="rtl">
+      {!isModal && (
+        <div className={workspace.breadcrumb}>
+          <Link href={parentReturnTo} className={workspace.breadcrumbLink}>
+            العضويات
+          </Link>
+          <span style={{ color: '#cbd5e1' }}>/</span>
+          <span className={workspace.breadcrumbCurrent}>
+            رقم <span dir="ltr">{membership.membership_number}</span>
           </span>
         </div>
-        <Link href="/system/memberships" className="btn" style={{ background: '#e2e8f0', color: '#0f172a' }}>
-          عودة للسجل العام
-        </Link>
-      </div>
+      )}
 
-      <div className="table-container" style={{ marginBottom: '2rem' }}>
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: '#1e3a5f', color: 'white' }}>
-          <h2 style={{ fontSize: '1.25rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>شجرة العضوية (الأسرة) | Family Tree</span>
-            <Link href={`/system/memberships/${id}/add-dependent`} className="btn btn-sm" style={{ background: 'white', color: 'var(--primary)', padding: '0.5rem 1rem' }}>
-              إضافة فرد تابع +
-            </Link>
-          </h2>
+      <section className={workspace.surface}>
+        <div className={workspace.contentBlock}>
+          <div className={workspace.detailHeader}>
+            <div>
+              <h1 className={workspace.detailTitle}>{mainPersonName}</h1>
+              <p className={workspace.detailSubtitle}>
+                رقم العضوية: <strong dir="ltr">{membership.membership_number}</strong> | الرقم
+                القومي: <strong dir="ltr">{membership.main_person.national_id}</strong>
+              </p>
+            </div>
+
+            <div className={workspace.toolbarActions}>
+              <span
+                className={`${workspace.statusPill} ${
+                  membership.status === 'active'
+                    ? workspace.statusActive
+                    : workspace.statusNeutral
+                }`}
+              >
+                {membership.status === 'active' ? 'عضوية نشطة' : membership.status}
+              </span>
+              <Link
+                href={appendReturnTo(
+                  `/system/memberships/${id}/dependents/new`,
+                  currentPageHref
+                )}
+                prefetch={true}
+                className={workspace.primaryAction}
+              >
+                <span>إضافة تابع</span>
+                <span aria-hidden="true">+</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className={workspace.metaGrid}>
+            <InfoCard label="رقم العضوية" value={membership.membership_number} dir="ltr" />
+            <InfoCard label="الرقم القومي" value={membership.main_person.national_id} dir="ltr" />
+            <InfoCard
+              label="رقم الموبايل"
+              value={membership.main_person.phone_number || '-'}
+              dir="ltr"
+            />
+            <InfoCard
+              label="تاريخ الإنشاء"
+              value={new Date(membership.created_at).toLocaleDateString('en-GB')}
+              dir="ltr"
+            />
+            <InfoCard label="عدد التابعين" value={String(membership.dependents.length)} />
+            <InfoCard label="نوع العضوية" value="عاملة" />
+          </div>
         </div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>الصلة التشريحية</th>
-              <th>الاسم الكامل</th>
-              <th>الرقم القومي</th>
-              <th>تاريخ الميلاد</th>
-              <th>حالة البطاقة/الكارنيه</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(family || []).map((member: Record<string, unknown>) => {
-              const person = Array.isArray(member.person) ? member.person[0] : member.person;
-              const registryList = Array.isArray(member.registry) ? member.registry : [member.registry];
-              const registry = registryList.find((r: Record<string, unknown>) => r?.is_current) || registryList[0];
-              return (
-                <tr key={member.id}>
-                  <td style={{ fontWeight: member.relationship === 'principal' ? 'bold' : 'normal', color: member.relationship === 'principal' ? 'var(--primary)' : 'inherit' }}>
-                    {relLabels[member.relationship] || member.relationship}
-                  </td>
-                  <td style={{ fontWeight: 600 }}>
-                    {person?.first_name} {person?.last_name}
-                    {registry && registry.membership_number && (
-                      <div dir="ltr" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                         ID: {registry.membership_number}
-                      </div>
-                    )}
-                  </td>
-                  <td dir="ltr" style={{ textAlign: 'right' }}>{person?.national_id}</td>
-                  <td dir="ltr" style={{ textAlign: 'right' }}>{formatDate(person?.birth_date) || 'غير محدد'}</td>
-                  <td>
-                    <span className="badge" style={{ background: member.card_status === 'active' ? '#dcfce7' : '#f1f5f9', color: member.card_status === 'active' ? '#166534' : '#475569' }}>
-                      {member.card_status === 'active' ? 'مفعل (Active)' : member.card_status}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <button className="icon-btn" title="تعديل" style={{ background: 'transparent', border: 'none' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
-                      <DeleteDependentBtn linkId={member.id} membershipId={id} isPrincipal={member.relationship === 'principal'} />
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      </section>
 
+      <section className={`${workspace.surface} ${workspace.tableSurface}`}>
+        <div className={workspace.contentBlock}>
+          <div className={workspace.sectionHeader}>
+            <div>
+              <h2 className={workspace.sectionTitle}>التابعون</h2>
+              <p className={workspace.sectionDescription}>
+                عرض جميع التابعين المسجلين لهذه العضوية مع إبقاء الإضافة داخل نفس سياق الملف.
+              </p>
+            </div>
+          </div>
+        </div>
+        <DependentsTable dependents={membership.dependents} />
+      </section>
     </div>
-  )
+  );
+}
+
+function InfoCard({
+  label,
+  value,
+  dir,
+}: {
+  label: string;
+  value: string;
+  dir?: 'ltr' | 'rtl';
+}) {
+  return (
+    <div className={workspace.metaCard}>
+      <div className={workspace.metaLabel}>{label}</div>
+      <div className={workspace.metaValue} dir={dir}>
+        {value}
+      </div>
+    </div>
+  );
 }
